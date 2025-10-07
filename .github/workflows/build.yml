@@ -22,7 +22,7 @@ jobs:
 
     - name: Build APK
       run: |
-        flet build apk --project-name "Permission Test" --build-name "1.0.0" --build-number 1 flet_test_permisions.py
+        flet build apk -vv --project-name "Permission Test" --package-name "com.hekma.permissiontest" --build-name "1.0.0" --build-number 1 flet_test_permisions.py
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
