@@ -24,6 +24,9 @@ env:
 
   # flet-cli version to install for `flet build`
   FLET_CLI_VERSION: 0.27.5
+  
+  # [الإصلاح الوحيد]: تحديد إصدار Flutter متوافق لحل مشكلة لغة Dart
+  FLUTTER_VERSION: '3.19.6'
 
   # Ensures Python uses UTF-8 encoding by default
   PYTHONUTF8: 1
@@ -47,12 +50,21 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    # [الإصلاح الوحيد]: إضافة خطوة تثبيت Flutter بالإصدار المحدد
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+
     - name: Install flet-cli ${{ env.FLET_CLI_VERSION }}
       run: |
         python -m pip install --upgrade pip
         pip install flet-cli==$FLET_CLI_VERSION
+
     - name: Accept SDK licenses
       run: yes | sdkmanager --licenses || true
+
     - name: Flet Build APK
       run: |
         flet build apk --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION \
