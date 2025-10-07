@@ -1,0 +1,32 @@
+name: Build Flet Android App
+
+    on:
+      push:
+        branches: [ "main" ]
+
+    jobs:
+      build:
+        runs-on: ubuntu-latest
+
+        steps:
+        - uses: actions/checkout@v3
+
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.11'
+
+        - name: Install Flet
+          run: |
+            python -m pip install --upgrade pip
+            pip install flet
+
+        - name: Build APK
+          run: |
+            flet build apk --project-name "Permission Test" --build-name "1.0.0" --build-number 1 flet_test_permisions.py
+
+        - name: Upload APK Artifact
+          uses: actions/upload-artifact@v3
+          with:
+            name: app-release.apk
+            path: build/apk/app-release.apk
