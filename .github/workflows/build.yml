@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v4
 
     - name: Set up Python
@@ -32,21 +32,17 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
       with:
-        packages: |
-          platform-tools
-          tools
-          build-tools;34.0.0
-          platforms;android-34
+        packages: "platform-tools build-tools;34.0.0 platforms;android-34"
 
-    - name: Accept Android SDK licenses
-      run: yes | sdkmanager --licenses
+    - name: Accept SDK licenses
+      run: yes | sdkmanager --licenses || true
 
     - name: Install Flet
       run: |
         python -m pip install --upgrade pip
         pip install flet
 
-    - name: Verify environment
+    - name: Verify tools
       run: |
         flutter doctor -v
         flet --version
@@ -60,10 +56,8 @@ jobs:
     - name: List build output
       run: ls -R build || true
 
-    - name: Upload APK Artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: |
-          build/apk/**/*.apk
-          build/**/*.apk
+        path: build/**/*.apk
