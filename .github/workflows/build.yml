@@ -35,7 +35,8 @@ jobs:
     # 5. Build the APK using Flet command
     - name: Build APK
       run: |
-        flet build apk flet_test_permisions.py -vv --project-name "Permission Test" --package-name "com.hekma.permissiontest" --build-name "1.0.0" --build-number 1
+        flet build apk flet_test_permisions.py -vv --build-number 1
+        
 
     # 6. Upload the generated APK as an artifact
     - name: Upload APK Artifact
