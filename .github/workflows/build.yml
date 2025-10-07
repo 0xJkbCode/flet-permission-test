@@ -25,7 +25,7 @@ jobs:
         flet build apk --project-name "Permission Test" --build-name "1.0.0" --build-number 1 flet_test_permisions.py
 
     - name: Upload APK Artifact
-      uses: actions/upload-artifact@vd
+      uses: actions/upload-artifact@v4
       with:
         name: app-release
         path: build/apk/app-release.apk
