@@ -37,7 +37,7 @@ jobs:
     # 6. Build the APK
     - name: Build APK
       run: |
-        flet build apk --module-name flet_test_permisions flet_test_permisions.py -vv
+        flet build apk --module-name flet_test_permisions.py -vv --build-number 1
 
     # 7. Upload the generated APK
     - name: Upload APK Artifact
