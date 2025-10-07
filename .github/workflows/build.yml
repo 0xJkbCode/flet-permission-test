@@ -3,42 +3,43 @@ name: Build Flet Android APK
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # This allows you to run the workflow manually
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    # 1. Checkout repository
     - uses: actions/checkout@v4
 
-    # 2. Set up Python environment
+    # 2. Set up Python
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    # 3. Set up Java Development Kit (JDK), which is required for Android builds
+    # 3. Set up Java
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    # 4. Install Flet and any other dependencies
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flet
+    # 4. Install Flet
+    - name: Install Flet
+      run: python -m pip install --upgrade pip && pip install flet
 
-    # 5. Build the APK using Flet command
+    # 5. THE CRITICAL STEP: Accept Android Licenses
+    - name: Accept Android Licenses
+      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
+    # 6. Build the APK
     - name: Build APK
       run: |
-        flet build apk --module-name flet_test_permisions.py -vv --build-number 1
-        
+        flet build apk --module-name flet_test_permisions flet_test_permisions.py -vv
 
-    # 6. Upload the generated APK as an artifact
+    # 7. Upload the generated APK
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
