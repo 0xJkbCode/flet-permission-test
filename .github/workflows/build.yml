@@ -51,7 +51,8 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install flet-cli==$FLET_CLI_VERSION
-
+    - name: Accept SDK licenses
+      run: yes | sdkmanager --licenses || true
     - name: Flet Build APK
       run: |
         flet build apk --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION \
