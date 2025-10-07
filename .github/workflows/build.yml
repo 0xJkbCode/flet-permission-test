@@ -10,27 +10,60 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
+
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.29.2'
+
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
+      with:
+        packages: |
+          platform-tools
+          tools
+          build-tools;34.0.0
+          platforms;android-34
+
+    - name: Accept Android SDK licenses
+      run: yes | sdkmanager --licenses
+
     - name: Install Flet
-      run: python -m pip install --upgrade pip && pip install flet
+      run: |
+        python -m pip install --upgrade pip
+        pip install flet
+
+    - name: Verify environment
+      run: |
+        flutter doctor -v
+        flet --version
+
     - name: Build APK
       run: |
         flet build apk --module-name flet_test_permisions.py -vv \
           --android-permissions android.permission.READ_CONTACTS=True \
                                 android.permission.WRITE_CONTACTS=True
+
+    - name: List build output
+      run: ls -R build || true
+
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: build/apk/app-release.apk
+        path: |
+          build/apk/**/*.apk
+          build/**/*.apk
