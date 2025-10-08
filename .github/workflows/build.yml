@@ -1,4 +1,4 @@
-name: Flet APK Build (on Windows Runner)
+name: Flet APK Build (Windows - Final Solution)
 
 on:
   push:
@@ -11,51 +11,64 @@ env:
   BUILD_VERSION: 1.0.0
   PYTHON_VERSION: 3.11
   FLET_CLI_VERSION: 0.28.3
-  # 🚨 التغيير هنا: الاعتماد على أحدث إصدار مستقر
-  FLUTTER_VERSION_TAG: latest 
+  # نستخدم 3.27.0 لأنه مثبت النجاح لديك
+  FLUTTER_VERSION_TAG: 3.27.0 
   
 jobs:
-  build:
+  # 1. تثبيت Flutter باستخدام الـ Action المحلي (flutter.yml)
+  setup_flutter:
     runs-on: windows-latest
-
     steps:
     - name: 🛑 Checkout code
       uses: actions/checkout@v4
       
-    # 1. 🎯 تثبيت Flutter (باستخدام latest)
-    - name: Setup Specific Flutter Version (${{ env.FLUTTER_VERSION_TAG }})
+    # 🎯 استخدام نمط الاستدعاء الذي نجح لديك
+    # هذا النمط سيعمل الآن لأننا على Windows Runner الذي كان يعمل عليه
+    - name: Install Flutter using Local Action
+      uses: ./.github/workflows/flutter.yml # استدعاء ملفك الخاص كـ Action
+      with:
+        runs-on: windows-latest
+        channel: stable
+        version: ${{ env.FLUTTER_VERSION_TAG }} 
+
+  # 2. بناء التطبيق: هذا Job سيعتمد على Job تثبيت Flutter
+  build:
+    needs: [setup_flutter] # يعتمد على إتمام Job التثبيت بنجاح
+    runs-on: windows-latest
+    
+    steps:
+    - name: 🛑 Checkout code
+      uses: actions/checkout@v4
+
+    # *** يجب إعادة تثبيت Flutter هنا أيضًا! ***
+    # بما أن الـ Jobين يعملان على آلتين افتراضيتين منفصلتين (Runner Isolation)، 
+    # يجب تكرار خطوة التثبيت في هذا الـ Job لكي يتعرف Flet على Flutter.
+    # سنستخدم هنا subosito/flutter-action لأنه الأنسب لـ Job عادي.
+    - name: 🎯 Re-Setup Flutter for Build Job
       uses: subosito/flutter-action@v2
       with:
-        # Action سيجد الآن أحدث إصدار مستقر ومتاح
-        flutter-version: ${{ env.FLUTTER_VERSION_TAG }}
         channel: stable
-        
-    # 2. إعداد Python
+        flutter-version: ${{ env.FLUTTER_VERSION_TAG }}
+
     - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    # 3. تثبيت Flet
     - name: ⚙️ Install Flet CLI
       run: |
         pip install flet-cli==${{ env.FLET_CLI_VERSION }}
         
-    # 4. قبول التراخيص
     - name: 🔐 Accept Android Licenses
       run: yes | %ANDROID_HOME%\cmdline-tools\latest\bin\sdkmanager --licenses
-      
-    # 5. بناء APK
+
+        # استخدام رمز استمرار الأوامر الصحيح (`) لنظام Windows
     - name: 🔨 Flet Build APK
-      # يجب استخدام رمز استمرار الأوامر الصحيح (`) في PowerShell
       run: |
-        flet build apk --release --skip-flutter-doctor `
-          --build-number ${{ env.BUILD_NUMBER }} `
-          --build-version ${{ env.BUILD_VERSION }} `
-          --android-permissions android.permission.READ_CONTACTS=True `
+        flet build apk  --skip-flutter-doctor --build-number ${{ env.BUILD_NUMBER }} --build-version ${{ env.BUILD_VERSION }} \
+          --android-permissions android.permission.READ_CONTACTS=True \
           android.permission.WRITE_CONTACTS=True
 
-    # 6. رفع ملف APK
     - name: ⬆️ Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
