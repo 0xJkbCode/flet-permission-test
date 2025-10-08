@@ -16,28 +16,24 @@ env:
   FLUTTER_VERSION_TAG: 3.28.0 
   
 jobs:
+  # 1. تثبيت Flutter: هذا job سيستدعي job التثبيت من flutter.yml
+  setup_flutter: # اسم جديد ومختلف للـ Job
+    # استخدام uses هنا يعني استدعاء Job من Workflow آخر
+    uses: ./.github/workflows/flutter.yml@main # اسم الملف ومساره، متبوعاً بـ @ واسم الفرع
+    with:
+      runs-on: ubuntu-latest
+      channel: stable
+      version: ${{ env.FLUTTER_VERSION_TAG }} # تمرير الإصدار الحديث (3.28.0)
+    # يمكننا الحصول على مخرجات هذا الـ Job إذا أردنا، لكن هنا يكفينا التنفيذ
+
+  # 2. بناء التطبيق: هذا Job سيعتمد على Job تثبيت Flutter
   build:
+    needs: [setup_flutter] # يعتمد على إتمام Job التثبيت بنجاح
     runs-on: ubuntu-latest
 
     steps:
     - name: 🛑 Checkout code
       uses: actions/checkout@v4
-
-    # 1. 🔑 منح إذن التنفيذ لملف action.sh
-    # هذه الخطوة تحل مشكلة "Permission denied" في بيئة Ubuntu
-    - name: Grant Execute Permission to Action Script
-      # يُفترض أن مسار action.sh هو في جذر الـ Action الذي يتم استدعاؤه (أو في مسار معروف).
-      # إذا كان action.sh موجوداً في .github/workflows/action.sh
-      run: chmod +x ./action.sh
-      # إذا لم تكن متأكداً من المسار، قد تحتاج لتعديل المسار أعلاه ليتناسب مع موقع action.sh الفعلي.
-      
-    # 2. 🎯 استدعاء Workflow لتثبيت Flutter بالإصدار المطلوب
-    - name: Setup Specific Flutter Version (${{ env.FLUTTER_VERSION_TAG }})
-      uses: ./.github/workflows/flutter.yml 
-      with:
-        runs-on: ubuntu-latest
-        channel: stable
-        version: ${{ env.FLUTTER_VERSION_TAG }} # نمرر الإصدار الحديث (3.28.0)
 
     # 3. إعداد Python
     - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
@@ -56,9 +52,9 @@ jobs:
       run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
     # 6. بناء APK
+        # بما أننا فصلنا Job التثبيت، يجب أن يكون Flutter الآن جاهزاً في PATH
     - name: 🔨 Flet Build APK
       run: |
-        # نستخدم --skip-flutter-doctor لأن التثبيت تم بالفعل عبر flutter.yml
         flet build apk --release --skip-flutter-doctor \
           --build-number $BUILD_NUMBER \
           --build-version $BUILD_VERSION \
