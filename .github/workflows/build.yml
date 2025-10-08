@@ -1,4 +1,4 @@
-name: Flet APK Build (Windows - Final Solution)
+name: Build Flutter APK
 
 on:
   push:
@@ -7,70 +7,48 @@ on:
   workflow_dispatch:
 
 env:
+  FLUTTER_VERSION: 3.24.5
   BUILD_NUMBER: 1
   BUILD_VERSION: 1.0.0
   PYTHON_VERSION: 3.11
   FLET_CLI_VERSION: 0.28.3
-  # نستخدم 3.27.0 لأنه مثبت النجاح لديك
-  FLUTTER_VERSION_TAG: 3.27.0 
-  
+
 jobs:
-  # 1. تثبيت Flutter باستخدام الـ Action المحلي (flutter.yml)
-  setup_flutter:
-    runs-on: windows-latest
-    steps:
-    - name: 🛑 Checkout code
-      uses: actions/checkout@v4
-      
-    # 🎯 استخدام نمط الاستدعاء الذي نجح لديك
-    # هذا النمط سيعمل الآن لأننا على Windows Runner الذي كان يعمل عليه
-    - name: Install Flutter using Local Action
-      uses: ./.github/workflows/flutter.yml # استدعاء ملفك الخاص كـ Action
-      with:
-        runs-on: windows-latest
-        channel: stable
-        version: ${{ env.FLUTTER_VERSION_TAG }} 
-
-  # 2. بناء التطبيق: هذا Job سيعتمد على Job تثبيت Flutter
   build:
-    needs: [setup_flutter] # يعتمد على إتمام Job التثبيت بنجاح
-    runs-on: windows-latest
-    
+    runs-on: ubuntu-latest
+
     steps:
-    - name: 🛑 Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    # *** يجب إعادة تثبيت Flutter هنا أيضًا! ***
-    # بما أن الـ Jobين يعملان على آلتين افتراضيتين منفصلتين (Runner Isolation)، 
-    # يجب تكرار خطوة التثبيت في هذا الـ Job لكي يتعرف Flet على Flutter.
-    # سنستخدم هنا subosito/flutter-action لأنه الأنسب لـ Job عادي.
-    - name: 🎯 Re-Setup Flutter for Build Job
-      uses: subosito/flutter-action@v2
-      with:
-        channel: stable
-        flutter-version: ${{ env.FLUTTER_VERSION_TAG }}
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      # نفس فكرة تثبيت Flutter يدويًا لكن على Ubuntu
+      - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        run: |
+          git clone https://github.com/flutter/flutter.git --branch $FLUTTER_VERSION --depth 1
+          echo "$PWD/flutter/bin" >> $GITHUB_PATH
+          flutter --version
 
-    - name: ⚙️ Install Flet CLI
-      run: |
-        pip install flet-cli==${{ env.FLET_CLI_VERSION }}
-        
-    - name: 🔐 Accept Android Licenses
-      run: yes | %ANDROID_HOME%\cmdline-tools\latest\bin\sdkmanager --licenses
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses
 
-        # استخدام رمز استمرار الأوامر الصحيح (`) لنظام Windows
-    - name: 🔨 Flet Build APK
-      run: |
-        flet build apk  --skip-flutter-doctor --build-number ${{ env.BUILD_NUMBER }} --build-version ${{ env.BUILD_VERSION }} \
-          --android-permissions android.permission.READ_CONTACTS=True \
-          android.permission.WRITE_CONTACTS=True
+      - name: Install flet-cli
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet-cli==$FLET_CLI_VERSION
 
-    - name: ⬆️ Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release
-        path: build/app/outputs/flutter-apk/app-release.apk
+      - name: Build APK
+        run: |
+          flet build apk --verbose \
+            --build-number=$BUILD_NUMBER \
+            --build-version=$BUILD_VERSION
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.apk
+          path: build/apk/
