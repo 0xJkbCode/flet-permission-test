@@ -11,22 +11,22 @@ env:
   BUILD_VERSION: 1.0.0
   PYTHON_VERSION: 3.11
   FLET_CLI_VERSION: 0.28.3
-  # نستخدم 3.27.0 أو 3.28.0، كلاهما أثبت نجاحه أو أفضل من القديم
-  FLUTTER_VERSION_TAG: 3.28.0 
+  # 🚨 التغيير هنا: الاعتماد على أحدث إصدار مستقر
+  FLUTTER_VERSION_TAG: latest 
   
 jobs:
   build:
-    runs-on: windows-latest # 🚨 تغيير نظام التشغيل إلى ويندوز 🚨
+    runs-on: windows-latest
 
     steps:
     - name: 🛑 Checkout code
       uses: actions/checkout@v4
       
-    # 1. 🎯 تثبيت Flutter (الحل لمشكلة توافق Dart)
-    # نعتمد على subosito/flutter-action@v2 لأنه موثوق في توفير الإصدار الصحيح
+    # 1. 🎯 تثبيت Flutter (باستخدام latest)
     - name: Setup Specific Flutter Version (${{ env.FLUTTER_VERSION_TAG }})
       uses: subosito/flutter-action@v2
       with:
+        # Action سيجد الآن أحدث إصدار مستقر ومتاح
         flutter-version: ${{ env.FLUTTER_VERSION_TAG }}
         channel: stable
         
@@ -38,18 +38,16 @@ jobs:
 
     # 3. تثبيت Flet
     - name: ⚙️ Install Flet CLI
-      # الأوامر تعمل بنفس الطريقة على Windows Shells
       run: |
         pip install flet-cli==${{ env.FLET_CLI_VERSION }}
         
-    # 4. قبول التراخيص (خطوة ضرورية على Windows أيضًا)
-    # يستخدم Windows مساراً مختلفاً لملفات Android SDK
+    # 4. قبول التراخيص
     - name: 🔐 Accept Android Licenses
       run: yes | %ANDROID_HOME%\cmdline-tools\latest\bin\sdkmanager --licenses
       
     # 5. بناء APK
     - name: 🔨 Flet Build APK
-      # يجب أن تكون بيئة Flutter/Dart مُعدة بشكل صحيح الآن.
+      # يجب استخدام رمز استمرار الأوامر الصحيح (`) في PowerShell
       run: |
         flet build apk --release --skip-flutter-doctor `
           --build-number ${{ env.BUILD_NUMBER }} `
@@ -62,5 +60,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        # المسار القياسي لملف APK على Windows/Linux بعد البناء
         path: build/app/outputs/flutter-apk/app-release.apk
