@@ -42,7 +42,9 @@ jobs:
 
     # [THE CRITICAL FIX]: Install flet FIRST, then run flutter doctor
     - name: Install Flet
-      run: pip install flet==0.28.3
+      run: pip install flet==0.25.0
+    - name: Install flet permission handler
+      run: pip install flet-permission-handler
 
     - name: Run Flutter Doctor and Accept Licenses
       run: |
