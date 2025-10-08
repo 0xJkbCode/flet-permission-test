@@ -1,5 +1,5 @@
 import flet as ft
-from flet.core.control_event import ControlEvent
+
 
 def main(page : ft.Page):
     page.scroll = ft.ScrollMode.ADAPTIVE
@@ -7,7 +7,7 @@ def main(page : ft.Page):
     ph = ft.PermissionHandler()
     page.overlay.append(ph)
 
-    def check_permission(e : ControlEvent) :
+    def check_permission(e ) :
         
         print("Type E is : ",dir(e))
         print("Data from E is : ",e.control.data)
@@ -15,12 +15,12 @@ def main(page : ft.Page):
         print("O is After check permission : ", o)
         page.add(ft.Text(f"Checked {e.control.data.name}: {o}"))
 
-    def request_permission(e: ControlEvent):
+    def request_permission(e):
         o = ph.request_permission(e.control.data)
         page.add(ft.Text(f"Requested {e.control.data.name}: {o}"))
         print("O is After request permission : ", o)
     
-    def open_app_settings(e: ControlEvent):
+    def open_app_settings(e):
         o = ph.open_app_settings()
         page.add(ft.Text(f"App Settings: {o}"))
         print("O is After open settings : ", o)
