@@ -1,0 +1,43 @@
+name: Flutter
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: 'Operating system'
+        required: true
+        default: 'ubuntu-latest'
+        type: string
+      channel:
+        description: 'Flutter channel'
+        required: true
+        default: 'stable'
+        type: string
+      version:
+        description: 'Flutter version'
+        required: true
+        default: 'latest'
+        type: string
+
+jobs:
+  flutter:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./
+        with:
+          channel: ${{ inputs.channel }}
+          version: ${{ inputs.version }}
+
+      - name: Dart version
+        run: dart --version
+      - name: Flutter version
+        run: flutter --version
+      - name: Flutter doctor
+        run: flutter doctor
+
+      - name: Run hello world
+        run: |
+          echo "main() { print('hello world'); }" > hello.dart
+          dart hello.dart
