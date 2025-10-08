@@ -41,9 +41,8 @@ jobs:
     # الخطوة 6: تنفيذ أمر البناء
     - name: Build APK
       run: |
-        flet build apk --verbose \
-        --android-permissions android.permission.READ_CONTACTS=True \
-        --android-permissions android.permission.WRITE_CONTACTS=True
+        flet build apk --verbose --android-permissions android.permission.READ_CONTACTS=True \
+        android.permission.WRITE_CONTACTS=True
 
     # الخطوة 7: رفع ملف الـ APK
     - name: Upload APK Artifact
