@@ -13,7 +13,7 @@ env:
   FLET_CLI_VERSION: 0.28.3
   
   # [الإصلاح رقم 1]: فرض استخدام إصدار Flutter قديم متوافق مع Flet 0.27.5
-  FLUTTER_VERSION: '3.35.5' 
+  FLUTTER_VERSION: '3.7.0' 
 
   PYTHONUTF8: 1
   FLET_CLI_NO_RICH_OUTPUT: 1
