@@ -9,9 +9,7 @@ env:
   PYTHONUTF8: 1
   FLET_CLI_NO_RICH_OUTPUT: 1
 
-  # The target combo we want to force
-  FLET_VERSION: "0.28.3"
-  FLUTTER_VERSION: "3.29.2"
+ 
 
 jobs:
   build:
@@ -33,7 +31,6 @@ jobs:
     - name: Set up Flutter SDK
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
         channel: 'stable'
         cache: true
 
@@ -47,7 +44,7 @@ jobs:
     # 5. Install the exact Flet version we need, AFTER Flutter is set up.
     - name: Install Dependencies
       # [الإصلاح]: بنثبت كل حاجة بيئة البناء محتاجاها
-      run: pip install flet flet-permission-handler
+      run: pip install flet
 
     # 6. Verify the environment BEFORE building
     - name: Verify Environment
