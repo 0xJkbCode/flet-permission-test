@@ -1,4 +1,4 @@
-name: Build Flet Android APK on Windows
+name: Build Flet Android APK (Windows)
 
 on:
   push:
@@ -9,46 +9,29 @@ env:
   PYTHONUTF8: 1
   FLET_CLI_NO_RICH_OUTPUT: 1
 
-  # [الحل]: استخدام إصدارات حديثة ومتوافقة مع بعضها
-  FLET_VERSION: "0.22.0"  # A recent, stable version of Flet
-  FLUTTER_VERSION: "3.19.6" # A Flutter version compatible with Flet 0.22.0
-
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    # 1. Checkout Repository
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    # 2. Set up Python
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
+        cache: 'pip' # <-- تفعيل الكاش لـ pip
 
-    # 3. Set up Flutter SDK with a specific compatible version
-    - name: Set up Flutter SDK
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        channel: 'stable'
-        cache: true
+    - name: Install and Cache Flet Dependencies
+      run: pip install flet
 
-    # 4. Install a specific compatible Flet version
-    - name: Install Flet
-      run: python -m pip install --upgrade pip; pip install flet==${{ env.FLET_VERSION }}
-
-    # 5. Accept Android Licenses
     - name: Accept Android Licenses
       run: echo $("y`n" * 10) | flutter doctor --android-licenses --suppress-analytics
 
-    # 6. Build APK (Reads config from pyproject.toml)
     - name: Build APK
       run: flet build apk --verbose
 
-    # 7. Upload APK
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
