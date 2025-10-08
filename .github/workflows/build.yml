@@ -1,4 +1,4 @@
-name: Build Flet Android APK
+name: Build Flet Android APK on Windows
 
 on:
   push:
@@ -7,51 +7,48 @@ on:
 
 jobs:
   build:
-    # استخدام Ubuntu هو الأسرع والأكثر شيوعًا في GitHub Actions
-    runs-on: ubuntu-latest
+    # [الحل الذكي]: تغيير بيئة التشغيل إلى ويندوز
+    runs-on: windows-latest
 
     steps:
-    # الخطوة 1: سحب الكود بتاعك
+    # الخطوة 1: سحب الكود
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    # الخطوة 2: تثبيت Python بالإصدار المناسب
+    # الخطوة 2: تثبيت Python
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    # الخطوة 3 (الحاسمة): تثبيت Flutter SDK باستخدام الأداة الصحيحة والموثوقة
+    # الخطوة 3: تثبيت Flutter SDK بالإصدار الصحيح (هذه الخطوة ستنجح الآن)
     - name: Set up Flutter SDK
       uses: subosito/flutter-action@v2
       with:
-        # تحديد إصدار Flutter متوافق مع إصدارات Flet الحديثة
-        flutter-version: '3.19.6'
+        flutter-version: '3.19.6' 
         channel: 'stable'
-        # تفعيل الكاش لتسريع عمليات البناء المستقبلية
         cache: true
 
     # الخطوة 4: تثبيت Flet CLI
     - name: Install Flet
-      run: python -m pip install --upgrade pip && pip install flet
+      # استخدام PowerShell syntax المناسب لويندوز
+      run: python -m pip install --upgrade pip; pip install flet
 
-    # الخطوة 5 (الحاسمة): قبول تراخيص أندرويد باستخدام Flutter
+    # الخطوة 5: قبول تراخيص أندرويد
     - name: Accept Android Licenses
-      # استخدام --suppress-analytics لمنع إرسال بيانات استخدام لجوجل
       run: yes | flutter doctor --android-licenses --suppress-analytics
 
-    # الخطوة 6: تنفيذ أمر البناء بالصيغة الصحيحة
-    # استخدام الصيغة التي ثبت نجاحها معك
-    # مع إزالة اسم الملف لأن Flet سيبحث عن main.py تلقائيًا
+    # الخطوة 6: تنفيذ أمر البناء
     - name: Build APK
       run: |
         flet build apk --verbose \
         --android-permissions android.permission.READ_CONTACTS=True \
         android.permission.WRITE_CONTACTS=True
 
-    # الخطوة 7: رفع ملف الـ APK الناتج
+    # الخطوة 7: رفع ملف الـ APK
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-release.apk
-        path: build/apk/app-release.apk
+        # تعديل بسيط في المسار ليتناسب مع ويندوز
+        path: build\apk\app-release.apk
