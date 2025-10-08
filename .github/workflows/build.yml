@@ -10,7 +10,7 @@ env:
   PYTHON_VERSION: '3.11'
   
   # Pinning the Flutter version that is known to be stable and compatible
-  FLUTTER_VERSION: '3.19.6'
+  FLUTTER_VERSION: '3.22.0'
 
 jobs:
   build:
