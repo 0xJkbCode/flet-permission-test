@@ -7,11 +7,14 @@ on:
   workflow_dispatch:
 
 env:
-  # تم تبسيط المتغيرات، Flet سيتولى أمر Flutter
+  # متغيرات الإصدار
   BUILD_NUMBER: 1
   BUILD_VERSION: 1.0.0
   PYTHON_VERSION: 3.11
   FLET_CLI_VERSION: 0.28.3
+  # المتغير الجديد لحل مشكلة التوافق
+  # نحدد إصدار Flutter حديث ومستقر (مثل 3.28.0) لضمان دعم Dart 3.9+
+  FLUTTER_TAG: v3.28.0 
   
 jobs:
   build:
@@ -31,14 +34,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install flet-cli==${{ env.FLET_CLI_VERSION }}
     
-    # الخطوة التالية اختيارية لكنها جيدة للمراقبة
+    # تثبيت متغير البيئة FLUTTER_SDK_TAG
+    - name: 🎯 Set FLUTTER_SDK_TAG for Compatibility
+      run: echo "FLUTTER_SDK_TAG=${{ env.FLUTTER_TAG }}" >> $GITHUB_ENV 
+
     - name: Check Flet version
       run: flet --version
 
     - name: Flet Build APK
       run: |
-        # سيقوم هذا الأمر تلقائياً بتنزيل وتثبيت إصدار Flutter المناسب وقبول التراخيص
-        flet build apk --verbose \
+        # الأمر flet build سيستخدم الآن الإصدار المحدد في FLUTTER_SDK_TAG
+        # نستخدم --clean لضمان تنزيل حزمة Flutter الصحيحة من البداية
+        flet build apk --release --clean \
           --build-number $BUILD_NUMBER \
           --build-version $BUILD_VERSION \
           --android-permissions android.permission.READ_CONTACTS=True \
@@ -48,4 +55,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: build/apk/app-release.apk
+        # المسار الافتراضي لملف APK في وضع الإنتاج (release)
+        path: build/app/outputs/flutter-apk/app-release.apk
