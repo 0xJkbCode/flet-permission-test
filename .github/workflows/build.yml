@@ -33,12 +33,11 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
 
     # [الإصلاح رقم 1]: إضافة خطوة تثبيت Flutter بالإصدار المحدد والمتوافق
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        channel: 'stable'
-        cache: true # Speeds up future builds
+    - name: Setup Flutter 3.24.5
+      run: |
+        git clone https://github.com/flutter/flutter.git --branch $FLUTTER_VERSION --depth 1
+        echo "$PWD/flutter/bin" >> $GITHUB_PATH
+        flutter --version
 
     - name: Install flet-cli ${{ env.FLET_CLI_VERSION }}
       run: |
