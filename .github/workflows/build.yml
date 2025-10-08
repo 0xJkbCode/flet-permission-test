@@ -28,7 +28,7 @@ jobs:
     - name: Grant Execute Permission to Action Script
       # يُفترض أن مسار action.sh هو في جذر الـ Action الذي يتم استدعاؤه (أو في مسار معروف).
       # إذا كان action.sh موجوداً في .github/workflows/action.sh
-      run: chmod +x .github/workflows/action.sh
+      run: chmod +x ./action.sh
       # إذا لم تكن متأكداً من المسار، قد تحتاج لتعديل المسار أعلاه ليتناسب مع موقع action.sh الفعلي.
       
     # 2. 🎯 استدعاء Workflow لتثبيت Flutter بالإصدار المطلوب
