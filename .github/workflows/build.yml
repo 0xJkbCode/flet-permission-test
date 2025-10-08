@@ -1,4 +1,4 @@
-name: Build Flet Android APK
+name: Build Flet Android APK (Path Forcing Test)
 
 on:
   push:
@@ -6,57 +6,69 @@ on:
   workflow_dispatch:
 
 env:
-  # Using the latest stable Python version
-  PYTHON_VERSION: '3.11'
-  
-  # Pinning the Flutter version that is known to be stable and compatible
-  FLUTTER_VERSION: '3.22.0'
+  PYTHONUTF8: 1
+  FLET_CLI_NO_RICH_OUTPUT: 1
+
+  # The target combo we want to force
+  FLET_VERSION: "0.28.3"
+  FLUTTER_VERSION: "3.22.0"
 
 jobs:
   build:
-    # We will use Ubuntu as it's generally faster for CI/CD
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Checkout the repository
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
+    # 2. Set up Python
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        python-version: '3.11'
         cache: 'pip'
 
-    - name: Set up Flutter SDK ${{ env.FLUTTER_VERSION }}
+    # 3. Set up the exact Flutter version we need. This action adds it to the PATH.
+    - name: Set up Flutter SDK
       uses: subosito/flutter-action@v2
       with:
         flutter-version: ${{ env.FLUTTER_VERSION }}
         channel: 'stable'
         cache: true
 
+    # 4. Set up Java
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    # [THE CRITICAL FIX]: Install flet FIRST, then run flutter doctor
-    - name: Install Flet
-      run: pip install flet==0.25.0
-    - name: Install flet-cli
-      run: pip install flet-cli==0.25.0
-    - name: Install flet permission handler
-      run: pip install flet-permission-handler
+    # 5. Install the exact Flet version we need, AFTER Flutter is set up.
+    - name: Install Dependencies
+      run: pip install flet==${{ env.FLET_VERSION }} flet-permission-handler
 
-    - name: Run Flutter Doctor and Accept Licenses
+    # 6. Verify the environment BEFORE building
+    - name: Verify Environment
       run: |
+        echo "--- Python Version ---"
+        python --version
+        echo "--- Flet Version ---"
+        flet --version
+        echo "--- Flutter Version ---"
+        flutter --version
+        echo "--- Checking Flutter Doctor ---"
         flutter doctor -v
-        yes | flutter doctor --android-licenses --suppress-analytics
-    
-    # Final build command, reading all config from pyproject.toml
+
+    # 7. Accept Android Licenses using the now-available Flutter command
+    - name: Accept Android Licenses
+      run: yes | flutter doctor --android-licenses --suppress-analytics
+
+    # 8. Run the build command
     - name: Build APK
       run: flet build apk --verbose
 
+    # 9. Upload the final artifact
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
