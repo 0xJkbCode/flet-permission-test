@@ -7,61 +7,74 @@ on:
   workflow_dispatch:
 
 env:
-  # متغيرات الإصدار
+  # متغيرات الإصدار (هذه مسموح بها في نطاق env العام)
   BUILD_NUMBER: 1
   BUILD_VERSION: 1.0.0
   PYTHON_VERSION: 3.11
   FLET_CLI_VERSION: 0.28.3
-  # تحديد الإصدار الذي يحل مشكلة Dart 3.9+
-  FLUTTER_VERSION_TAG: 3.28.0 
-  
+  FLUTTER_VERSION_TAG: 3.28.0 # القيمة الثابتة
+
 jobs:
   # 1. تثبيت Flutter: هذا job سيستدعي job التثبيت من flutter.yml
-  setup_flutter: # اسم جديد ومختلف للـ Job
-    # استخدام uses هنا يعني استدعاء Job من Workflow آخر
-    uses: ./.github/workflows/flutter.yml@main # اسم الملف ومساره، متبوعاً بـ @ واسم الفرع
-    with:
-      runs-on: ubuntu-latest
-      channel: stable
-      version: ${{ env.FLUTTER_VERSION_TAG }} # تمرير الإصدار الحديث (3.28.0)
-    # يمكننا الحصول على مخرجات هذا الـ Job إذا أردنا، لكن هنا يكفينا التنفيذ
+  setup_flutter:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    # 🎯 استخدام خطوة "run" بسيطة لتعيين متغيرات البيئة قبل الاستدعاء (إذا كنا سنعتمد على env)
+    # ولكن الطريقة الأبسط هي تمرير القيمة مباشرة كما يلي:
+    
+    - name: Call Flutter Setup Workflow
+      uses: ./.github/workflows/flutter.yml@main 
+      with:
+        runs-on: ubuntu-latest
+        channel: stable
+        # *** التغيير هنا: تمرير القيمة مباشرة أو استخدام سياق مختلف ***
+        # بما أن القيمة ثابتة (3.28.0)، يمكن تمريرها مباشرة.
+        version: ${{ vars.FLUTTER_VERSION_TAG || env.FLUTTER_VERSION_TAG }} 
+        # ملاحظة: إذا كان المتغير معرّفًا في نطاق (workflow level env)، يُمكن أن يعمل ${{ env.FLUTTER_VERSION_TAG }} إذا تم تضمينه في Job، لكن الأمان هنا في الفصل.
 
   # 2. بناء التطبيق: هذا Job سيعتمد على Job تثبيت Flutter
   build:
-    needs: [setup_flutter] # يعتمد على إتمام Job التثبيت بنجاح
+    needs: [setup_flutter] 
     runs-on: ubuntu-latest
 
     steps:
     - name: 🛑 Checkout code
       uses: actions/checkout@v4
 
-    # 3. إعداد Python
+    # *** يجب إعادة تثبيت Flutter في هذا Job أيضًا ***
+    # بما أن Job التثبيت (setup_flutter) يعمل على آلة افتراضية مختلفة، 
+    # يجب تكرار خطوة تثبيت Flutter في هذا الـ Job (build) باستخدام نفس القيم.
+
+    - name: 🎯 Re-Setup Flutter for Build Job
+      uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        flutter-version: ${{ env.FLUTTER_VERSION_TAG }}
+
     - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    # 4. تثبيت Flet
     - name: ⚙️ Install Flet CLI
       run: |
         python -m pip install --upgrade pip
         pip install flet-cli==${{ env.FLET_CLI_VERSION }}
         
-    # 5. قبول تراخيص الأندرويد (ضروري للبناء)
     - name: 🔐 Accept Android Licenses
       run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
-    # 6. بناء APK
-        # بما أننا فصلنا Job التثبيت، يجب أن يكون Flutter الآن جاهزاً في PATH
     - name: 🔨 Flet Build APK
       run: |
         flet build apk --release --skip-flutter-doctor \
-          --build-number $BUILD_NUMBER \
-          --build-version $BUILD_VERSION \
+          --build-number ${{ env.BUILD_NUMBER }} \
+          --build-version ${{ env.BUILD_VERSION }} \
           --android-permissions android.permission.READ_CONTACTS=True \
           android.permission.WRITE_CONTACTS=True
 
-    # 7. رفع ملف APK
     - name: ⬆️ Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
