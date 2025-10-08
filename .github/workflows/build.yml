@@ -45,7 +45,7 @@ jobs:
     - name: Flet Build APK
       run: |
         
-        flet build apk --release --clean \
+        flet build apk --release --cleanup-app \
           --build-number $BUILD_NUMBER \
           --build-version $BUILD_VERSION \
           --android-permissions android.permission.READ_CONTACTS=True \
