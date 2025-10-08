@@ -36,7 +36,7 @@ jobs:
 
     # الخطوة 5: قبول تراخيص أندرويد
     - name: Accept Android Licenses
-      run: yes | flutter doctor --android-licenses --suppress-analytics
+      run: for ($i=0; $i -lt 10; $i++) { echo "y" } | flutter doctor --android-licenses --suppress-analytics
 
     # الخطوة 6: تنفيذ أمر البناء
     - name: Build APK
