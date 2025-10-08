@@ -1,66 +1,42 @@
-name: APK Build
+name: Flutter SDK for Linux
 
 on:
   push:
-    branches:
-      - main
+    branches: [main, v*]
+  pull_request:
+    branches: [main, v*]
+  schedule:
+    # https://crontab.guru/#40_10_*_*_*
+    - cron: '40 10 * * *'
   workflow_dispatch:
 
-env:
-  # متغيرات الإصدار
-  BUILD_NUMBER: 1
-  BUILD_VERSION: 1.0.0
-  PYTHON_VERSION: 3.11
-  FLET_CLI_VERSION: 0.28.3
-  FLUTTER_VERSION_TAG: 3.28.0 # الإصدار المطلوب لحل مشكلة Dart 3.9+
-  
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  stable:
+    uses: ./.github/workflows/flutter.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - latest
+          - 3.27.0
+    with:
+      runs-on: ubuntu-latest
+      channel: stable
+      version: ${{ matrix.version }}
 
-    steps:
-    - name: 🛑 Checkout code
-      uses: actions/checkout@v4
-
-    # 1. 🎯 استدعاء Workflow لتثبيت Flutter (باستخدام flutter.yml المتاح لديك)
-    # هذا يحل مشكلة التوافق بضمان تثبيت الإصدار المطلوب.
-    - name: Setup Specific Flutter Version (${{ env.FLUTTER_VERSION_TAG }})
-      uses: ./.github/workflows/flutter.yml # استدعاء الملف المحلي
-      with:
-        runs-on: ubuntu-latest
-        channel: stable
-        version: ${{ env.FLUTTER_VERSION_TAG }} # تمرير 3.28.0
-
-    # 2. إعداد Python
-    - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    # 3. تثبيت Flet
-    - name: ⚙️ Install Flet CLI
-      run: |
-        python -m pip install --upgrade pip
-        pip install flet-cli==${{ env.FLET_CLI_VERSION }}
-        
-    # 4. قبول تراخيص الأندرويد (ضروري للبناء)
-    - name: 🔐 Accept Android Licenses
-      # يجب أن يكون المسار متاحاً بعد تثبيت Flutter
-      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-
-    # 5. بناء APK باستخدام Flutter المُثبَّت
-    # نستخدم --skip-flutter-doctor لأن التثبيت تم بالفعل عبر flutter.yml
-    - name: 🔨 Flet Build APK
-      run: |
-        flet build apk --release --skip-flutter-doctor \
-          --build-number $BUILD_NUMBER \
-          --build-version $BUILD_VERSION \
-          --android-permissions android.permission.READ_CONTACTS=True \
-          android.permission.WRITE_CONTACTS=True
-
-    # 6. رفع ملف APK
-    - name: ⬆️ Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release
-        path: build/app/outputs/flutter-apk/app-release.apk
+  beta:
+    uses: ./.github/workflows/flutter.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - latest
+          - 3.27.0-0.1.pre
+    with:
+      runs-on: ubuntu-latest
+      channel: beta
+      version: ${{ matrix.version }}
