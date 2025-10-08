@@ -1,13 +1,13 @@
 import flet as ft
+from flet_permission_handler import PermissionHandler, PermissionType
 
-
-
+# from flet.core.control_event import ControlEvent
 
 
 def main(page: ft.Page):
     page.scroll = ft.ScrollMode.ADAPTIVE
     page.appbar = ft.AppBar(title=ft.Text("اختبار صلاحيات"))
-    ph = ft.PermissionHandler()
+    ph = PermissionHandler()
     page.overlay.append(ph)
 
     def check_permission(e):
@@ -32,12 +32,12 @@ def main(page: ft.Page):
     page.add(
         ft.OutlinedButton(
             "اختبار صلاحيه جهات الاتصال",
-            data=ft.PermissionType.STORAGE,
+            data=PermissionType.STORAGE,
             on_click=check_permission,
         ),
         ft.OutlinedButton(
             "ارسال طلب الى صلاحيه جهات الاتصال",
-            data=ft.PermissionType.STORAGE,
+            data=PermissionType.STORAGE,
             on_click=request_permission,
         ),
         ft.OutlinedButton("Open App Settings", on_click=open_app_settings),

@@ -1,4 +1,4 @@
-name: Build Flet Android APK (Path Forcing Test)
+name: Build Flet Android APK (Developer's Recipe)
 
 on:
   push:
@@ -9,64 +9,34 @@ env:
   PYTHONUTF8: 1
   FLET_CLI_NO_RICH_OUTPUT: 1
 
- 
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout the repository
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    # 2. Set up Python
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         cache: 'pip'
 
-    # 3. Set up the exact Flutter version we need. This action adds it to the PATH.
-    - name: Set up Flutter SDK
-      uses: subosito/flutter-action@v2
-      with:
-        channel: 'stable'
-        cache: true
-
-    # 4. Set up Java
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    # 5. Install the exact Flet version we need, AFTER Flutter is set up.
     - name: Install Dependencies
-      # [الإصلاح]: بنثبت كل حاجة بيئة البناء محتاجاها
-      run: pip install flet
+      # [الإصلاح]: تثبيت المكتبتين معًا
+      run: pip install flet flet-permission-handler
 
-    # 6. Verify the environment BEFORE building
-    - name: Verify Environment
-      run: |
-        echo "--- Python Version ---"
-        python --version
-        echo "--- Flet Version ---"
-        flet --version
-        echo "--- Flutter Version ---"
-        flutter --version
-        echo "--- Checking Flutter Doctor ---"
-        flutter doctor -v
+    - name: Build APK with Cache Clearing
+      # [اللمسة السحرية]: إضافة --clear-cache لضمان بناء نظيف
+      run: flet build apk --verbose --clear-cache
 
-    # 7. Accept Android Licenses using the now-available Flutter command
-    - name: Accept Android Licenses
-      run: yes | flutter doctor --android-licenses --suppress-analytics
-    
-    # 8. Run the build command
-    - name: Build APK
-      run: flet build apk --verbose
-
-    # 9. Upload the final artifact
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
