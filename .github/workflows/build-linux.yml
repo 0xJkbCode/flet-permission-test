@@ -1,7 +1,12 @@
 name: Build Flet Android APK (Linux)
 
 on:
-  workflow_dispatch: # هنخليه يدوي فقط عشان نتحكم فيه
+  workflow_dispatch:
+
+env:
+  PYTHONUTF8: 1
+  FLET_CLI_NO_RICH_OUTPUT: 1
+  FLUTTER_VERSION: "3.19.6"
 
 jobs:
   build:
@@ -17,14 +22,25 @@ jobs:
         python-version: '3.11'
         cache: 'pip'
 
-    - name: Set up Java (Required on Linux)
+    - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install Flet and Dependencies
+    # [الإصلاح]: إعادة خطوة تثبيت Flutter الصريحة
+    - name: Set up Flutter SDK
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+
+    - name: Install Flet
       run: pip install flet
+      
+    - name: Accept Android Licenses
+      run: yes | flutter doctor --android-licenses --suppress-analytics
 
     - name: Build APK
       run: flet build apk --verbose
