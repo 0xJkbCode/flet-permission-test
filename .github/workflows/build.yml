@@ -1,31 +1,30 @@
-name: Build Flutter APK (Windows Runner)
+name: Build Flutter APK
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.24.5
+  BUILD_NUMBER: 1
+  BUILD_VERSION: 1.0.0
+  PYTHON_VERSION: 3.11
+  FLET_CLI_VERSION: 0.28.3
 
 jobs:
-  build:
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter (Stable)
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.27.0"
-          channel: "stable"
-
-      - name: Flutter Doctor
-        run: flutter doctor -v
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Build APK
-        run: flutter build apk --release
+  stable:
+    uses: ./.github/workflows/flutter.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - $FLUTTER_VERSION
+    with:
+      runs-on: windows-latest
+      channel: stable
+      version: ${{ matrix.version }}

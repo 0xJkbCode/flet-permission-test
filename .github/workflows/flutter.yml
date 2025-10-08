@@ -30,6 +30,8 @@ jobs:
           channel: ${{ inputs.channel }}
           version: ${{ inputs.version }}
 
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses
       - name: Dart version
         run: dart --version
       - name: Flutter version
@@ -37,7 +39,20 @@ jobs:
       - name: Flutter doctor
         run: flutter doctor
 
-      - name: Run hello world
+      - name: Install flet-cli
         run: |
-          echo "main() { print('hello world'); }" > hello.dart
-          dart hello.dart
+          python -m pip install --upgrade pip
+          pip install flet-cli==$FLET_CLI_VERSION
+
+      - name: Build APK
+        run: |
+          flet build apk --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION \
+          --android-permissions android.permission.READ_CONTACTS=True \
+          android.permission.WRITE_CONTACTS=True
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.apk
+          path: build/apk/
+      
