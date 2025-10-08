@@ -40,11 +40,11 @@ jobs:
 
     - name: Check Flet version
       run: flet --version
-
+    # الأمر flet build سيستخدم الآن الإصدار المحدد في FLUTTER_SDK_TAG
+    # نستخدم --clean لضمان تنزيل حزمة Flutter الصحيحة من البداية
     - name: Flet Build APK
       run: |
-        # الأمر flet build سيستخدم الآن الإصدار المحدد في FLUTTER_SDK_TAG
-        # نستخدم --clean لضمان تنزيل حزمة Flutter الصحيحة من البداية
+        
         flet build apk --release --clean \
           --build-number $BUILD_NUMBER \
           --build-version $BUILD_VERSION \
