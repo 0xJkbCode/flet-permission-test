@@ -1,0 +1,25 @@
+# pyproject.toml
+
+[tool.flet]
+# an optional list of assets directories
+assets_dir = "assets"
+
+[tool.flet.build]
+# build number
+build_number = 1
+# build version
+build_version = "1.0.0"
+
+[tool.flet.build.apk]
+# optional path to an icon file (.png, .jpeg, .bmp)
+# icon = "assets/icon.png"
+# project name
+project_name = "Permission Test"
+# package name
+package_name = "com.hekma.permissiontest"
+
+[tool.flet.build.apk.android]
+# Configuring permissions for AndroidManifest.xml
+[tool.flet.build.apk.android.permission]
+"android.permission.READ_CONTACTS" = true
+"android.permission.WRITE_CONTACTS" = true
