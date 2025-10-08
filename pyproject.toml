@@ -1,27 +1,22 @@
 # pyproject.toml
 
-[tool.flet]
-# an optional list of assets directories
-assets_dir = "assets"
 
 [tool.flet.build]
-# build number
 build_number = 1
-# build version
 build_version = "1.0.0"
 
 [tool.flet.build.apk]
-# optional path to an icon file (.png, .jpeg, .bmp)
-# icon = "assets/icon.png"
-# project name
 project_name = "Permission Test"
-# package name
 package_name = "com.hekma.permissiontest"
 
-[tool.flet.build.apk.android]
-# Configuring permissions for AndroidManifest.xml
+# The fix for ModuleNotFoundError
+[tool.flet.build.apk.requirements]
+"flet-permission-handler" = "*"
+
 [tool.flet.build.apk.android.permission]
-"android.permission.READ_CONTACTS" = true
-"android.permission.WRITE_CONTACTS" = true
+"android.permission.READ_STORAGE" = true
+"android.permission.WRITE_STORAGE" = true
+
+# The fix for the build error
 [tool.flet.flutter.pubspec.dependency_overrides]
 webview_flutter_android = "4.10.1"

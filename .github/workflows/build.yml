@@ -11,7 +11,7 @@ env:
 
   # The target combo we want to force
   FLET_VERSION: "0.28.3"
-  FLUTTER_VERSION: "3.22.0"
+  FLUTTER_VERSION: "3.29.2"
 
 jobs:
   build:
@@ -46,7 +46,8 @@ jobs:
 
     # 5. Install the exact Flet version we need, AFTER Flutter is set up.
     - name: Install Dependencies
-      run: pip install flet==${{ env.FLET_VERSION }} flet-permission-handler
+      # [الإصلاح]: بنثبت كل حاجة بيئة البناء محتاجاها
+      run: pip install flet flet-permission-handler
 
     # 6. Verify the environment BEFORE building
     - name: Verify Environment
@@ -63,7 +64,7 @@ jobs:
     # 7. Accept Android Licenses using the now-available Flutter command
     - name: Accept Android Licenses
       run: yes | flutter doctor --android-licenses --suppress-analytics
-
+    
     # 8. Run the build command
     - name: Build APK
       run: flet build apk --verbose
