@@ -1,42 +1,43 @@
-name: Flutter SDK for Linux
+name: Flutter
 
 on:
-  push:
-    branches: [main, v*]
-  pull_request:
-    branches: [main, v*]
-  schedule:
-    # https://crontab.guru/#40_10_*_*_*
-    - cron: '40 10 * * *'
-  workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  workflow_call:
+    inputs:
+      runs-on:
+        description: 'Operating system'
+        required: true
+        default: 'ubuntu-latest'
+        type: string
+      channel:
+        description: 'Flutter channel'
+        required: true
+        default: 'stable'
+        type: string
+      version:
+        description: 'Flutter version'
+        required: true
+        default: 'latest'
+        type: string
 
 jobs:
-  stable:
-    uses: ./.github/workflows/flutter.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        version:
-          - latest
-          - 3.27.0
-    with:
-      runs-on: ubuntu-latest
-      channel: stable
-      version: ${{ matrix.version }}
+  flutter:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
 
-  beta:
-    uses: ./.github/workflows/flutter.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        version:
-          - latest
-          - 3.27.0-0.1.pre
-    with:
-      runs-on: ubuntu-latest
-      channel: beta
-      version: ${{ matrix.version }}
+      - uses: ./
+        with:
+          channel: ${{ inputs.channel }}
+          version: ${{ inputs.version }}
+
+      - name: Dart version
+        run: dart --version
+      - name: Flutter version
+        run: flutter --version
+      - name: Flutter doctor
+        run: flutter doctor
+
+      - name: Run hello world
+        run: |
+          echo "main() { print('hello world'); }" > hello.dart
+          dart hello.dart
