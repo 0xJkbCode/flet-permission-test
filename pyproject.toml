@@ -27,7 +27,7 @@ build_version = "1.0.0"
 # project_name و package_name هنا لم يعد لهما لزوم لأن flet سيقرأهم من [project]
 package_name = "com.hekma.permissiontest"
 
-[tool.flet.build.apk.android.permission]
+[tool.flet.android.permission]
 "android.permission.READ_EXTERNAL_STORAGE" = true
 "android.permission.WRITE_EXTERNAL_STORAGE" = true
 
