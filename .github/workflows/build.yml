@@ -1,4 +1,4 @@
-name: The Final Linux Build
+name: Proof of APK build and permissions issue
 
 on:
   push:
@@ -6,9 +6,8 @@ on:
   workflow_dispatch:
 
 env:
-  # The Golden Combo
-  FLET_VERSION: "0.28.3"
-  FLUTTER_VERSION: "3.22.0"
+  PYTHONUTF8: 1 # Still useful for clean logs
+  FLET_CLI_NO_RICH_OUTPUT: 1
 
 jobs:
   build:
@@ -30,21 +29,10 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Set up Flutter SDK
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        channel: 'stable'
-        cache: true
+    # We do NOT set up Flutter. We let Flet handle it.
 
-    - name: Add Flutter to PATH
-      run: echo "$FLUTTER_ROOT/bin" >> $GITHUB_PATH
-
-    - name: Install All Python Dependencies from pyproject.toml
+    - name: Install Dependencies from pyproject.toml
       run: pip install .
-
-    - name: Accept Android Licenses
-      run: yes | flutter doctor --android-licenses
 
     - name: Build APK
       run: flet build apk --verbose

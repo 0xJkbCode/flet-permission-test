@@ -1,12 +1,12 @@
 # ===============================================================
-# pyproject.toml (The Final Source of Truth v2)
+# pyproject.toml (The Great Synthesis)
 # ===============================================================
 
 [project]
-# [الإصلاح]: استخدام اسم صالح بدون مسافات
 name = "permission_test"
 version = "1.0.0"
 dependencies = [
+    # We use a modern Flet version that supports the handler
     "flet==0.28.3",
     "flet-permission-handler"
 ]
@@ -16,7 +16,6 @@ dependencies = [
 # ===============================================================
 
 [tool.flet]
-# هذا هو المكان الصحيح لتعريف product_name حسب توثيق flet
 product_name = "Permission Test"
 
 [tool.flet.build]
@@ -24,12 +23,16 @@ build_number = 1
 build_version = "1.0.0"
 
 [tool.flet.build.apk]
-# project_name و package_name هنا لم يعد لهما لزوم لأن flet سيقرأهم من [project]
 package_name = "com.hekma.permissiontest"
 
 [tool.flet.android.permission]
 "android.permission.READ_EXTERNAL_STORAGE" = true
 "android.permission.WRITE_EXTERNAL_STORAGE" = true
 
+# ===============================================================
+# The Two Critical Fixes Together
+# ===============================================================
+
+# Fix #1: Solves the Dart language version error
 [tool.flet.flutter.pubspec.dependency_overrides]
 webview_flutter_android = "4.10.1"
