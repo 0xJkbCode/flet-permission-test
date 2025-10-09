@@ -1,4 +1,4 @@
-name: Surgical Build Test (Windows)
+name: Surgical Build Test (Windows) 2
 
 on:
   workflow_dispatch:
