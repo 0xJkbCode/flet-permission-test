@@ -1,13 +1,18 @@
-name: The Grand Unification Build
+name: The Final Linux Build
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
+env:
+  # The Golden Combo
+  FLET_VERSION: "0.28.3"
+  FLUTTER_VERSION: "3.22.0"
+
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repository
@@ -19,19 +24,27 @@ jobs:
         python-version: '3.11'
         cache: 'pip'
 
-    - name: Set up Flutter SDK (The Key)
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Set up Flutter SDK
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.22.0' 
+        flutter-version: ${{ env.FLUTTER_VERSION }}
         channel: 'stable'
         cache: true
 
-    # [الإصلاح]: التثبيت من pyproject.toml الصحيح
+    - name: Add Flutter to PATH
+      run: echo "$FLUTTER_ROOT/bin" >> $GITHUB_PATH
+
     - name: Install All Python Dependencies from pyproject.toml
       run: pip install .
 
     - name: Accept Android Licenses
-      run: echo $("y`n" * 10) | flutter doctor --android-licenses
+      run: yes | flutter doctor --android-licenses
 
     - name: Build APK
       run: flet build apk --verbose
@@ -40,4 +53,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-release.apk
-        path: build\apk\app-release.apk
+        path: build/apk/app-release.apk
