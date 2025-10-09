@@ -1,7 +1,16 @@
-name: Surgical Build Test (Windows) 3
+name: The Final Windows Stand
 
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
+
+env:
+  # Attack 1: Force Python's encoding
+  PYTHONUTF8: "1"
+  
+  # Attack 2: Tell Rich library to assume UTF-8
+  TERM: "xterm-256color" 
 
 jobs:
   build:
@@ -17,38 +26,25 @@ jobs:
         python-version: '3.11'
         cache: 'pip'
 
-    - name: Set up Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-
     - name: Set up Flutter SDK
       uses: subosito/flutter-action@v2
       with:
+        flutter-version: '3.19.6' 
         channel: 'stable'
         cache: true
 
-    - name: Install Dependencies from pyproject.toml
+    - name: Install Dependencies
       run: pip install .
 
-    # [الإصلاح]: استخدام الطريقة الصحيحة والمضمونة لقبول التراخيص في PowerShell
-    - name: Accept Android Licenses Surgically
-      run: |
-        $sdkmanager = Join-Path $env:ANDROID_HOME "cmdline-tools/latest/bin/sdkmanager.bat"
-        echo $("y`n" * 20) | & $sdkmanager --licenses
-      shell: pwsh
-
-    - name: Verify Environment
-      run: flutter doctor -v
-      shell: pwsh
+    - name: Accept Android Licenses
+      run: echo $("y`n" * 10) | flutter doctor --android-licenses
 
     - name: Build APK
-      run: flet build apk --verbose
-      shell: pwsh
+      # Attack 3: Tell Flet explicitly to not use rich output
+      run: flet build apk --verbose --no-rich-output
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-release-win-surgical.apk
+        name: app-release.apk
         path: build\apk\app-release.apk
