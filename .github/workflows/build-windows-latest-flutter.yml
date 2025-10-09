@@ -1,4 +1,4 @@
-name: Latest Flutter Test Build (Windows)
+name: Surgical Build Test (Windows)
 
 on:
   workflow_dispatch:
@@ -17,22 +17,29 @@ jobs:
         python-version: '3.11'
         cache: 'pip'
 
-    # [التجربة]: تثبيت أحدث إصدار من Flutter على بيئة ويندوز
+    # [الإصلاح 1]: استخدام Java 21 لتتوافق مع Flutter الحديث
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    # استخدام أحدث إصدار من Flutter
     - name: Set up Flutter SDK
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.35.5'
         channel: 'stable'
         cache: true
 
     - name: Install Dependencies from pyproject.toml
       run: pip install .
 
-    - name: Accept Android Licenses
-      run: echo $("y`n" * 10) | flutter doctor --android-licenses
+    # [الإصلاح 2]: استخدام sdkmanager مباشرة لقبول التراخيص
+    - name: Accept Android Licenses Surgically
+      run: echo $("y`n" * 10) | ${env:ANDROID_HOME}\cmdline-tools\latest\bin\sdkmanager.bat --licenses
 
-    - name: Verify Flutter Version (The Moment of Truth)
-      run: flutter --version
+    - name: Verify Environment
+      run: flutter doctor -v
 
     - name: Build APK
       run: flet build apk --verbose
@@ -40,5 +47,5 @@ jobs:
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-release-win-latest-flutter.apk
+        name: app-release-win-surgical.apk
         path: build\apk\app-release.apk
