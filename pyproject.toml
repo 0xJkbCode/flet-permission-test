@@ -1,5 +1,23 @@
-# pyproject.toml
+# ===============================================================
+# pyproject.toml (The Final Source of Truth)
+# ===============================================================
 
+# This section defines the project and its Python dependencies
+# Flet's build tool reads this section to know what to package.
+[project]
+name = "HekmaDev Test"
+version = "1.15.0"
+dependencies = [
+    # We pin a specific Flet version that we know is compatible with Flutter 3.19.6
+    "flet==0.22.0",
+    
+    # We explicitly declare our need for the permission handler
+    "flet-permission-handler"
+]
+
+# ===============================================================
+# Flet-specific build settings
+# ===============================================================
 
 [tool.flet.build]
 build_number = 1
@@ -9,13 +27,18 @@ build_version = "1.0.0"
 project_name = "Permission Test"
 package_name = "com.hekma.permissiontest"
 
-[tool.flet.build.apk.requirements]
-"flet-permission-handler" = { path = "vendor/flet-permission-handler" }
+# ===============================================================
+# Android-specific settings for AndroidManifest.xml
+# ===============================================================
 
 [tool.flet.build.apk.android.permission]
-"android.permission.READ_STORAGE" = true
-"android.permission.WRITE_STORAGE" = true
+# Keeping STORAGE permissions as requested
+"android.permission.READ_EXTERNAL_STORAGE" = true
+"android.permission.WRITE_EXTERNAL_STORAGE" = true
 
-# The fix for the build error
-[tool.flet.flutter.pubspec.dependency_overrides]
-webview_flutter_android = "4.10.1"
+# ===============================================================
+# Flutter-specific overrides (If needed)
+# ===============================================================
+# We are removing the webview override because we are using an older,
+# fully compatible Flutter version (3.19.6), which doesn't have this issue.
+# Keeping this section empty or removing it is cleaner.
