@@ -30,3 +30,6 @@ package_name = "com.hekma.permissiontest"
 [tool.flet.build.apk.android.permission]
 "android.permission.READ_EXTERNAL_STORAGE" = true
 "android.permission.WRITE_EXTERNAL_STORAGE" = true
+
+[tool.flet.flutter.pubspec.dependency_overrides]
+webview_flutter_android = "4.10.1"
