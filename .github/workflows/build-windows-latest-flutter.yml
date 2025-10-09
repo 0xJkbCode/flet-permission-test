@@ -1,4 +1,4 @@
-name: Surgical Build Test (Windows) 2
+name: Surgical Build Test (Windows) 3
 
 on:
   workflow_dispatch:
@@ -17,14 +17,12 @@ jobs:
         python-version: '3.11'
         cache: 'pip'
 
-    # [الإصلاح 1]: استخدام Java 21 لتتوافق مع Flutter الحديث
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '21'
 
-    # استخدام أحدث إصدار من Flutter
     - name: Set up Flutter SDK
       uses: subosito/flutter-action@v2
       with:
@@ -34,15 +32,20 @@ jobs:
     - name: Install Dependencies from pyproject.toml
       run: pip install .
 
-    # [الإصلاح 2]: استخدام sdkmanager مباشرة لقبول التراخيص
+    # [الإصلاح]: استخدام الطريقة الصحيحة والمضمونة لقبول التراخيص في PowerShell
     - name: Accept Android Licenses Surgically
-      run: echo $("y`n" * 10) | ${env:ANDROID_HOME}\cmdline-tools\latest\bin\sdkmanager.bat --licenses
+      run: |
+        $sdkmanager = Join-Path $env:ANDROID_HOME "cmdline-tools/latest/bin/sdkmanager.bat"
+        echo $("y`n" * 20) | & $sdkmanager --licenses
+      shell: pwsh
 
     - name: Verify Environment
       run: flutter doctor -v
+      shell: pwsh
 
     - name: Build APK
       run: flet build apk --verbose
+      shell: pwsh
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
