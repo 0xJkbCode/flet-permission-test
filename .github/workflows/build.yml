@@ -1,4 +1,4 @@
-name: Build Flet Android APK (Developer's Recipe)
+name: Build Flet Android APK (Local Inclusion Strategy)
 
 on:
   push:
@@ -17,6 +17,10 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    # [التعديل 1]: إضافة خطوة "استنساخ" المكتبة محليًا
+    - name: Clone Flet Permission Handler dependency
+      run: git clone https://github.com/flet-dev/flet-permission-handler.git vendor/flet-permission-handler
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -29,13 +33,21 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    # [التعديل 2]: تغيير طريقة التثبيت لتعتمد على pyproject.toml
     - name: Install Dependencies
-      # [الإصلاح]: تثبيت المكتبتين معًا
-      run: pip install flet flet-permission-handler
+      run: pip install flet .
 
-    - name: Build APK with Cache Clearing
-      # [اللمسة السحرية]: إضافة --clear-cache لضمان بناء نظيف
-      run: flet build apk --verbose --clear-cache
+    # [التعديل 3]: إزالة --clear-cache والعودة للحلول المثبتة
+    - name: Add Flutter step and Accept Licenses
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.6'
+        channel: 'stable'
+        cache: true
+    - run: yes | flutter doctor --android-licenses
+
+    - name: Build APK
+      run: flet build apk --verbose
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
