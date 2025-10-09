@@ -1,0 +1,44 @@
+name: Latest Flutter Test Build (Windows)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    # [التجربة]: تثبيت أحدث إصدار من Flutter على بيئة ويندوز
+    - name: Set up Flutter SDK
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.35.5'
+        channel: 'stable'
+        cache: true
+
+    - name: Install Dependencies from pyproject.toml
+      run: pip install .
+
+    - name: Accept Android Licenses
+      run: echo $("y`n" * 10) | flutter doctor --android-licenses
+
+    - name: Verify Flutter Version (The Moment of Truth)
+      run: flutter --version
+
+    - name: Build APK
+      run: flet build apk --verbose
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release-win-latest-flutter.apk
+        path: build\apk\app-release.apk
