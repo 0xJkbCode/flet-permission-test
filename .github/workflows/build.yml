@@ -1,7 +1,13 @@
-name: The Grand Unification Build
+name: Build Flet Android APK (Local Inclusion Strategy)
 
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
+
+env:
+  PYTHONUTF8: 1
+  FLET_CLI_NO_RICH_OUTPUT: 1
 
 jobs:
   build:
@@ -11,24 +17,34 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    # [التعديل 1]: إضافة خطوة "استنساخ" المكتبة محليًا
+    - name: Clone Flet Permission Handler dependency
+      run: git clone https://github.com/flet-dev/flet-permission-handler.git vendor/flet-permission-handler
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         cache: 'pip'
 
-    - name: Set up Flutter SDK (The Key)
-      uses: subosito/flutter-action@v2
+    - name: Set up Java
+      uses: actions/setup-java@v4
       with:
-        flutter-version: '3.19.6' 
-        channel: 'stable'
-        cache: true
+        distribution: 'temurin'
+        java-version: '17'
 
-    - name: Install All Python Dependencies from pyproject.toml
+    # [التعديل 2]: تغيير طريقة التثبيت لتعتمد على pyproject.toml
+    - name: Install Dependencies
       run: pip install .
 
-    - name: Accept Android Licenses
-      run: echo $("y`n" * 10) | flutter doctor --android-licenses
+    # [التعديل 3]: إزالة --clear-cache والعودة للحلول المثبتة
+    - name: Add Flutter step and Accept Licenses
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.6'
+        channel: 'stable'
+        cache: true
+    - run: yes | flutter doctor --android-licenses
 
     - name: Build APK
       run: flet build apk --verbose
@@ -37,4 +53,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-release.apk
-        path: build\apk\app-release.apk
+        path: build/apk/app-release.apk
