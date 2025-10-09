@@ -7,7 +7,7 @@
 name = "permission_test"
 version = "1.0.0"
 dependencies = [
-    "flet==0.28.0",
+    "flet==0.28.3",
     "flet-permission-handler"
 ]
 
