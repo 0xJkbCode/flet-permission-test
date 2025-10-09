@@ -1,17 +1,13 @@
 # ===============================================================
-# pyproject.toml (The Final Source of Truth)
+# pyproject.toml (The Final Source of Truth v2)
 # ===============================================================
 
-# This section defines the project and its Python dependencies
-# Flet's build tool reads this section to know what to package.
 [project]
-name = "HekmaDev Test"
-version = "1.15.0"
+# [الإصلاح]: استخدام اسم صالح بدون مسافات
+name = "permission_test"
+version = "1.0.0"
 dependencies = [
-    # We pin a specific Flet version that we know is compatible with Flutter 3.19.6
     "flet==0.22.0",
-    
-    # We explicitly declare our need for the permission handler
     "flet-permission-handler"
 ]
 
@@ -19,26 +15,18 @@ dependencies = [
 # Flet-specific build settings
 # ===============================================================
 
+[tool.flet]
+# هذا هو المكان الصحيح لتعريف product_name حسب توثيق flet
+product_name = "Permission Test"
+
 [tool.flet.build]
 build_number = 1
 build_version = "1.0.0"
 
 [tool.flet.build.apk]
-project_name = "Permission Test"
+# project_name و package_name هنا لم يعد لهما لزوم لأن flet سيقرأهم من [project]
 package_name = "com.hekma.permissiontest"
 
-# ===============================================================
-# Android-specific settings for AndroidManifest.xml
-# ===============================================================
-
 [tool.flet.build.apk.android.permission]
-# Keeping STORAGE permissions as requested
 "android.permission.READ_EXTERNAL_STORAGE" = true
 "android.permission.WRITE_EXTERNAL_STORAGE" = true
-
-# ===============================================================
-# Flutter-specific overrides (If needed)
-# ===============================================================
-# We are removing the webview override because we are using an older,
-# fully compatible Flutter version (3.19.6), which doesn't have this issue.
-# Keeping this section empty or removing it is cleaner.
