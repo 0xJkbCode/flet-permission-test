@@ -1,9 +1,3 @@
-# ===================================================================
-#               Ultimate Flet Hijack Build Workflow
-#          Builds using a custom template and the latest
-#              Flutter SDK, overriding Flet's defaults.
-# ===================================================================
-
 name: Custom Template APK Build (Hijack Mode)
 
 on:
