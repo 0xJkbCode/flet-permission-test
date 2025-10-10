@@ -1,12 +1,19 @@
-name: Proof of APK build and permissions issue
+# ===================================================================
+#               Ultimate Flet Hijack Build Workflow
+#          Builds using a custom template and the latest
+#              Flutter SDK, overriding Flet's defaults.
+# ===================================================================
+
+name: Custom Template APK Build (Hijack Mode)
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
+# Environment variables for cleaner logs and consistent encoding
 env:
-  PYTHONUTF8: 1 # Still useful for clean logs
+  PYTHONUTF8: 1
   FLET_CLI_NO_RICH_OUTPUT: 1
 
 jobs:
@@ -14,31 +21,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: 1. Checkout Main Project Repo
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
+      # --- الخطوة 1 الصحيحة: تحميل القالب إلى مجلد محلي ---
+      - name: 2. Checkout Custom Build Template
+        uses: actions/checkout@v4
+        with:
+          repository: 0xJkbCode/custom_flet_template
+          path: custom_template
 
-    - name: Set up Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      # --- الخطوة 2 الصحيحة: تثبيت Flutter بشكل استباقي ---
+      - name: 3. Setup Flutter SDK (Target: 3.35.6)
+        uses: flet-dev/setup-flutter@v1
+        with:
+          flutter-version: '3.35.6'
 
-    # We do NOT set up Flutter. We let Flet handle it.
-    
-    - name: Install Dependencies from pyproject.toml
-      run: pip install .
+      - name: 4. Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
 
-    - name: Build APK
-      run: flet build apk --verbose --template https://github.com/0xJkbCode/custom_flet_template
+      - name: 5. Set up Java (Target: 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release.apk
-        path: build/apk/app-release.apk
+      - name: 6. Install Project Dependencies
+        run: pip install .
+
+      # --- الخطوة 3 الصحيحة: استخدام القالب المحلي ---
+      - name: 7. Build APK with Custom Template (The Hijack)
+        run: flet build apk --verbose --template ./custom_template
+
+      - name: 8. Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.apk
+          path: build/apk/app-release.apk
