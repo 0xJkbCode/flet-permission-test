@@ -1,4 +1,4 @@
-name: The Final Hack v2.1 - Correct Python Command
+name: The Final Hack v2.2 - Absolute Path
 
 on:
   push:
@@ -16,7 +16,9 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    # الخطوة دي بقى ليها اسم (id) عشان نقدر نستخدم الـ output بتاعها
     - name: Set up Python
+      id: setup_python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
@@ -35,21 +37,19 @@ jobs:
         channel: 'stable'
         cache: true
 
-    # [الإصلاح]: ننقل خطوة التثبيت إلى هنا
     - name: Install Dependencies from pyproject.toml
       run: pip install .
 
-    # ------------------ THE SURGERY (Now it will work) ------------------
+    # ------------------ THE SURGERY (Absolute Path Fix) ------------------
     - name: Patch flet-cli to accept modern Flutter
       run: |
-        # Find the path to flet-cli's build.py
-        BUILD_PY_PATH=$(py -3.11 -c "import flet_cli.commands.build as b; print(b.__file__)")
+        # [الإصلاح]: بنستخدم المسار الكامل للبايثون من الخطوة اللي اسمها setup_python
+        BUILD_PY_PATH=$(${{ steps.setup_python.outputs.python-path }} -c "import flet_cli.commands.build as b; print(b.__file__)")
         echo "Found build.py at: $BUILD_PY_PATH"
         
-        # Use 'sed' to replace the hard-coded version number
         echo "Performing surgery to update MINIMAL_FLUTTER_VERSION..."
-        sed -i 's/MINIMAL_FLUTTER_VERSION = version.Version("3.29.2")/MINIMAL_FLUTTER_VERSION = version.Version("${{ env.FLUTTER_VERSION }}")/' $BUILD_PY_PATH
-        echo "Patch complete. Flet should now accept Flutter ${{ env.FLUTTER_VERSION }}."
+        sed -i 's/MINIMAL_FLUTTER_VERSION = version.Version("3.29.2")/MINIMAL_FLUTTER_VERSION = version.Version("${{ env.FLUTTER_VERSION }}")/' "$BUILD_PY_PATH"
+        echo "Patch complete."
     # ------------------------------------------------------------------
 
     - name: Accept Android Licenses
