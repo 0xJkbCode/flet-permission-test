@@ -1,11 +1,10 @@
-name: The Final Hack v2 - Future Proofing
+name: The Final Hack v2.1 - Correct Order
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
-# Target the latest stable Flutter version
 env:
   FLUTTER_VERSION: '3.35.6'
 
@@ -36,10 +35,11 @@ jobs:
         channel: 'stable'
         cache: true
 
+    # [الإصلاح]: ننقل خطوة التثبيت إلى هنا
     - name: Install Dependencies from pyproject.toml
       run: pip install .
 
-    # ------------------ THE SURGERY ------------------
+    # ------------------ THE SURGERY (Now it will work) ------------------
     - name: Patch flet-cli to accept modern Flutter
       run: |
         # Find the path to flet-cli's build.py
@@ -47,11 +47,10 @@ jobs:
         echo "Found build.py at: $BUILD_PY_PATH"
         
         # Use 'sed' to replace the hard-coded version number
-        # We are replacing the old minimal version with our new target version
         echo "Performing surgery to update MINIMAL_FLUTTER_VERSION..."
         sed -i 's/MINIMAL_FLUTTER_VERSION = version.Version("3.29.2")/MINIMAL_FLUTTER_VERSION = version.Version("${{ env.FLUTTER_VERSION }}")/' $BUILD_PY_PATH
         echo "Patch complete. Flet should now accept Flutter ${{ env.FLUTTER_VERSION }}."
-    # -------------------------------------------------
+    # ------------------------------------------------------------------
 
     - name: Accept Android Licenses
       run: yes | flutter doctor --android-licenses
