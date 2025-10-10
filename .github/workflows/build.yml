@@ -1,64 +1,95 @@
-name: Custom Template APK Build (Hijack Mode)
+name: Parallel Build Test (Windows vs Linux)
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
-env:
-  PYTHONUTF8: 1
-  FLET_CLI_NO_RICH_OUTPUT: 1
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-flet-app:
+    # [المصفوفة]: بنعرف هنا المتغيرات بتاعتنا
+    strategy:
+      fail-fast: false # عشان لو وظيفة فشلت، التانية تكمل عادي
+      matrix:
+        # بنعرف نظام التشغيل اللي هنشتغل عليه
+        os: [windows-latest, ubuntu-latest]
+        
+    # بنقول للوظيفة إنها تستخدم نظام التشغيل من المصفوفة
+    runs-on: ${{ matrix.os }}
 
     steps:
-      # الخطوة 1: سحب كود المشروع الأساسي (flet-permission-test)
-      - name: 1. Checkout Main Project Repo
-        uses: actions/checkout@v4
-        with:
-          # بنحدد المسار اللي الكود هينزل فيه
-          path: main_project
+    # ------------------ خطوات مشتركة ------------------
 
-      # الخطوة 2: سحب كود القالب المُعدَّل في فولدر منفصل
-      - name: 2. Checkout Custom Build Template
-        uses: actions/checkout@v4
-        with:
-          repository: 0xJkbCode/custom_flet_template
-          # بنحدد المسار اللي القالب هينزل فيه
-          path: custom_template
+    - name: Checkout Main Project Repo
+      uses: actions/checkout@v4
+      with:
+        path: main_project
 
-      # الخطوة 3: تثبيت Python
-      - name: 3. Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
+    - name: Checkout Custom Build Template
+      uses: actions/checkout@v4
+      with:
+        repository: 0xJkbCode/custom_flet_template
+        path: custom_template
 
-      # الخطوة 4: تثبيت Java (باستخدام الإصدار 17 اللي حددته)
-      - name: 4. Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
 
-      # الخطوة 5: تثبيت اعتماديات المشروع
-      - name: 5. Install Project Dependencies
-        # بنحدد الـ working-directory عشان pip يشتغل جوه فولدر المشروع
-        working-directory: ./main_project
-        run: pip install .
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
 
-      # الخطوة 6: تنفيذ أمر البناء (الأمر الحاسم)
-      - name: 6. Build APK with Custom Local Template
-        # بنحدد الـ working-directory عشان flet يشتغل جوه فولدر المشروع
-        working-directory: ./main_project
-        run: flet build apk --verbose --template ../custom_template
+    - name: Install Project Dependencies
+      working-directory: ./main_project
+      run: pip install .
 
-      # الخطوة 7: رفع الـ APK الناتج
-      - name: 7. Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release.apk
-          # بنحدد المسار الصحيح للـ APK بالنسبة للـ root
-          path: main_project/build/apk/app-release.apk```
+    # ------------------ خطوات خاصة بويندوز فقط ------------------
+
+    - name: Set up Flutter SDK (Windows Only)
+      # بنستخدم الشرط ده عشان الخطوة دي تشتغل على ويندوز بس
+      if: runner.os == 'Windows'
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.35.6'
+        channel: 'stable'
+        cache: true
+
+    # ------------------ خطوات خاصة بلينكس فقط ------------------
+
+    - name: Install Flutter System Dependencies (Linux Only)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y curl git unzip xz-utils zip libglu1-mesa clang cmake ninja-build pkg-config
+
+    # ------------------ خطوة البناء (بتختلف لكل نظام) ------------------
+
+    - name: Build APK (Windows)
+      if: runner.os == 'Windows'
+      working-directory: ./main_project
+      run: flet build apk --verbose --no-rich-output --template ../custom_template
+
+    - name: Build APK (Linux)
+      if: runner.os == 'Linux'
+      working-directory: ./main_project
+      run: flet build apk --verbose --template ../custom_template
+
+    # ------------------ خطوة الرفع (بتختلف لكل نظام) ------------------
+
+    - name: Upload APK Artifact (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release-windows.apk
+        path: main_project/build/apk/app-release.apk
+
+    - name: Upload APK Artifact (Linux)
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release-linux.apk
+        path: main_project/build/apk/app-release.apk
