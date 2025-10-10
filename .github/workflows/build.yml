@@ -1,4 +1,4 @@
-name: The Final Hack v2.3 - Correct python3.11
+name: The Final Hack v2.3 - Correct flet_cli
 
 on:
   push:

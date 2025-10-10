@@ -8,6 +8,7 @@ version = "1.0.0"
 dependencies = [
     # We use a modern Flet version that supports the handler
     "flet==0.28.3",
+    "flet_cli==0.28.3",
     "flet-permission-handler"
 ]
 
