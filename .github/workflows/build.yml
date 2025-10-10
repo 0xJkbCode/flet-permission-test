@@ -1,16 +1,10 @@
-# ===================================================================
-#               Ultimate Flet Hijack Build Workflow v2.0
-#      Correct Syntax - Uses Local Checkout for Robustness
-# ===================================================================
-
-name: Custom Template APK Build (Hijack Mode v2.0)
+name: Custom Template APK Build (Hijack Mode)
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
-# Environment variables for cleaner logs and consistent encoding
 env:
   PYTHONUTF8: 1
   FLET_CLI_NO_RICH_OUTPUT: 1
@@ -20,48 +14,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the main project code (flet-permission-test)
+      # الخطوة 1: سحب كود المشروع الأساسي (flet-permission-test)
       - name: 1. Checkout Main Project Repo
         uses: actions/checkout@v4
+        with:
+          # بنحدد المسار اللي الكود هينزل فيه
+          path: main_project
 
-      # Step 2: Checkout the custom template from its separate repo into a local folder
+      # الخطوة 2: سحب كود القالب المُعدَّل في فولدر منفصل
       - name: 2. Checkout Custom Build Template
         uses: actions/checkout@v4
         with:
           repository: 0xJkbCode/custom_flet_template
+          # بنحدد المسار اللي القالب هينزل فيه
           path: custom_template
 
-      # Step 3: Explicitly install our target Flutter version to override Flet's choice
-      - name: 3. Setup Flutter SDK (Target: 3.35.6)
-        uses: flet-dev/setup-flutter@v1
-        with:
-          flutter-version: '3.35.6'
-
-      # Step 4: Setup Python
-      - name: 4. Set up Python
+      # الخطوة 3: تثبيت Python
+      - name: 3. Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      # Step 5: Setup Java 17, required by modern build tools
-      - name: 5. Set up Java (Target: 17)
+      # الخطوة 4: تثبيت Java (باستخدام الإصدار 17 اللي حددته)
+      - name: 4. Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # Step 6: Install dependencies for the main project
-      - name: 6. Install Project Dependencies
+      # الخطوة 5: تثبيت اعتماديات المشروع
+      - name: 5. Install Project Dependencies
+        # بنحدد الـ working-directory عشان pip يشتغل جوه فولدر المشروع
+        working-directory: ./main_project
         run: pip install .
 
-      # Step 7: The final build command, pointing to the LOCAL template folder
-      - name: 7. Build APK with Custom Local Template
-        run: flet build apk --verbose --template ./custom_template
+      # الخطوة 6: تنفيذ أمر البناء (الأمر الحاسم)
+      - name: 6. Build APK with Custom Local Template
+        # بنحدد الـ working-directory عشان flet يشتغل جوه فولدر المشروع
+        working-directory: ./main_project
+        run: flet build apk --verbose --template ../custom_template
 
-      # Step 8: Upload the resulting APK
-      - name: 8. Upload APK Artifact
+      # الخطوة 7: رفع الـ APK الناتج
+      - name: 7. Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release.apk
-          path: build/apk/app-release.apk
+          # بنحدد المسار الصحيح للـ APK بالنسبة للـ root
+          path: main_project/build/apk/app-release.apk```
