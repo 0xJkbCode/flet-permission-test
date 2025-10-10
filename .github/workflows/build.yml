@@ -1,4 +1,4 @@
-name: The Final Hack v2.1 - Correct Order
+name: The Final Hack v2.1 - Correct Python Command
 
 on:
   push:
@@ -43,7 +43,7 @@ jobs:
     - name: Patch flet-cli to accept modern Flutter
       run: |
         # Find the path to flet-cli's build.py
-        BUILD_PY_PATH=$(python -c "import flet_cli.commands.build as b; print(b.__file__)")
+        BUILD_PY_PATH=$(py -3.11 -c "import flet_cli.commands.build as b; print(b.__file__)")
         echo "Found build.py at: $BUILD_PY_PATH"
         
         # Use 'sed' to replace the hard-coded version number
