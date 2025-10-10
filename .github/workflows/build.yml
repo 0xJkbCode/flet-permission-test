@@ -1,25 +1,18 @@
-name: Parallel Build Test (Windows vs Linux)
+name: The Final Windows Build
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
 
+# [الهجوم الثلاثي]: متغيرات البيئة للقضاء على UnicodeEncodeError
+env:
+  PYTHONUTF8: "1"
+  TERM: "xterm-256color"
+
 jobs:
-  build-flet-app:
-    # [المصفوفة]: بنعرف هنا المتغيرات بتاعتنا
-    strategy:
-      fail-fast: false # عشان لو وظيفة فشلت، التانية تكمل عادي
-      matrix:
-        # بنعرف نظام التشغيل اللي هنشتغل عليه
-        os: [windows-latest, ubuntu-latest]
-        
-    # بنقول للوظيفة إنها تستخدم نظام التشغيل من المصفوفة
-    runs-on: ${{ matrix.os }}
+  build:
+    runs-on: windows-latest
 
     steps:
-    # ------------------ خطوات مشتركة ------------------
-
     - name: Checkout Main Project Repo
       uses: actions/checkout@v4
       with:
@@ -43,53 +36,26 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install Project Dependencies
-      working-directory: ./main_project
-      run: pip install .
-
-    # ------------------ خطوات خاصة بويندوز فقط ------------------
-
-    - name: Set up Flutter SDK (Windows Only)
-      # بنستخدم الشرط ده عشان الخطوة دي تشتغل على ويندوز بس
-      if: runner.os == 'Windows'
+    - name: Set up Flutter SDK (Latest Version)
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.35.6'
         channel: 'stable'
         cache: true
 
-    # ------------------ خطوات خاصة بلينكس فقط ------------------
-
-    - name: Install Flutter System Dependencies (Linux Only)
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y curl git unzip xz-utils zip libglu1-mesa clang cmake ninja-build pkg-config
-
-    # ------------------ خطوة البناء (بتختلف لكل نظام) ------------------
-
-    - name: Build APK (Windows)
-      if: runner.os == 'Windows'
+    - name: Install Project Dependencies
       working-directory: ./main_project
+      run: pip install .
+      shell: pwsh
+
+    - name: Build APK with Custom Template and Unicode Fix
+      working-directory: ./main_project
+      # بنستخدم PowerShell عشان نضمن التوافق مع متغيرات البيئة
+      shell: pwsh
       run: flet build apk --verbose --no-rich-output --template ../custom_template
 
-    - name: Build APK (Linux)
-      if: runner.os == 'Linux'
-      working-directory: ./main_project
-      run: flet build apk --verbose --template ../custom_template
-
-    # ------------------ خطوة الرفع (بتختلف لكل نظام) ------------------
-
-    - name: Upload APK Artifact (Windows)
-      if: runner.os == 'Windows'
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-release-windows.apk
-        path: main_project/build/apk/app-release.apk
-
-    - name: Upload APK Artifact (Linux)
-      if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release-linux.apk
+        name: app-release-final.apk
         path: main_project/build/apk/app-release.apk
