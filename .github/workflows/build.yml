@@ -1,4 +1,4 @@
-name: The Final Hack v2.3 - Correct flet_cli
+name: The Final Hack v2.4 - install watchdog>=4.0.0
 
 on:
   push:
@@ -45,7 +45,7 @@ jobs:
     # [الإصلاح]: بنستخدم المسار الكامل للبايثون من الخطوة اللي اسمها setup_python
       run: |
         
-        BUILD_PY_PATH=$(python3.11 -c "import flet_cli.commands.build as b; print(b.__file__)")
+        BUILD_PY_PATH=$(python -c "import flet_cli.commands.build as b; print(b.__file__)")
         echo "Found build.py at: $BUILD_PY_PATH"
         
         echo "Performing surgery to update MINIMAL_FLUTTER_VERSION..."

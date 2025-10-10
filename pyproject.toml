@@ -9,7 +9,8 @@ dependencies = [
     # We use a modern Flet version that supports the handler
     "flet==0.28.3",
     "flet_cli==0.28.3",
-    "flet-permission-handler"
+    "flet-permission-handler",
+    "watchdog>=4.0.0"
 ]
 
 # ===============================================================
