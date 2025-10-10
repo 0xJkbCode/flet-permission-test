@@ -1,28 +1,21 @@
-name: The Final Windows Build
+name: The Final Hack v2 - Future Proofing
 
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
 
-# [الهجوم الثلاثي]: متغيرات البيئة للقضاء على UnicodeEncodeError
+# Target the latest stable Flutter version
 env:
-  PYTHONUTF8: "1"
-  TERM: "xterm-256color"
+  FLUTTER_VERSION: '3.35.6'
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Main Project Repo
+    - name: Checkout Repository
       uses: actions/checkout@v4
-      with:
-        path: main_project
-
-    - name: Checkout Custom Build Template
-      uses: actions/checkout@v4
-      with:
-        repository: 0xJkbCode/custom_flet_template
-        path: custom_template
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -36,26 +29,38 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Set up Flutter SDK (Latest Version)
+    - name: Set up Target Flutter SDK
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.35.6'
+        flutter-version: ${{ env.FLUTTER_VERSION }}
         channel: 'stable'
         cache: true
 
-    - name: Install Project Dependencies
-      working-directory: ./main_project
+    - name: Install Dependencies from pyproject.toml
       run: pip install .
-      shell: pwsh
 
-    - name: Build APK with Custom Template and Unicode Fix
-      working-directory: ./main_project
-      # بنستخدم PowerShell عشان نضمن التوافق مع متغيرات البيئة
-      shell: pwsh
-      run: flet build apk --verbose --no-rich-output --template ../custom_template
+    # ------------------ THE SURGERY ------------------
+    - name: Patch flet-cli to accept modern Flutter
+      run: |
+        # Find the path to flet-cli's build.py
+        BUILD_PY_PATH=$(python -c "import flet_cli.commands.build as b; print(b.__file__)")
+        echo "Found build.py at: $BUILD_PY_PATH"
+        
+        # Use 'sed' to replace the hard-coded version number
+        # We are replacing the old minimal version with our new target version
+        echo "Performing surgery to update MINIMAL_FLUTTER_VERSION..."
+        sed -i 's/MINIMAL_FLUTTER_VERSION = version.Version("3.29.2")/MINIMAL_FLUTTER_VERSION = version.Version("${{ env.FLUTTER_VERSION }}")/' $BUILD_PY_PATH
+        echo "Patch complete. Flet should now accept Flutter ${{ env.FLUTTER_VERSION }}."
+    # -------------------------------------------------
+
+    - name: Accept Android Licenses
+      run: yes | flutter doctor --android-licenses
+
+    - name: Build APK
+      run: flet build apk --verbose
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-release-final.apk
-        path: main_project/build/apk/app-release.apk
+        name: app-release.apk
+        path: build/apk/app-release.apk
