@@ -1,4 +1,4 @@
-name: The Final Hack v2.6 - install watchdog==4.0.2
+name: The Final Hack v2.7 - install python 3.13
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
       id: setup_python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.13'
         cache: 'pip'
 
     - name: Set up Java
