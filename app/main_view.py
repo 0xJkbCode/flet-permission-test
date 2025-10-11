@@ -1,5 +1,5 @@
 import flet as ft
-from app.contacts_manager import request_permissions , add_contact
+from app.contacts_manager import request_contact_permissions , add_contact
 
 def main_view(page : ft.Page):
     page.title = "اضافه جهات اتصال"
@@ -12,7 +12,7 @@ def main_view(page : ft.Page):
     phone_field = ft.TextField(label="رقم الهاتف" , width=300)
 
     def on_request_click(e):
-        if request_permissions(page):
+        if request_contact_permissions():
             page.add(ft.Text("تم الحصول على الصلاحية بنجاح", color=ft.Colors.GREEN))
         else:
             page.add(ft.Text("فشل الحصول على الصلاحية",color=ft.Colors.RED))
