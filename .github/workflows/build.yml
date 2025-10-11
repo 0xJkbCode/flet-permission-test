@@ -1,4 +1,4 @@
-name: The Official Flet Recipe Build
+name: Create a .fvmrc
 
 on:
   workflow_dispatch:
