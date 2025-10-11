@@ -1,4 +1,4 @@
-name: The True Final Build - Using Latest Flutter
+name: The True Final Build - Include .fvmrc to project
 
 on:
   workflow_dispatch:
