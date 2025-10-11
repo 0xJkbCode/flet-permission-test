@@ -1,8 +1,6 @@
-name: The B-M-I Strategy v1.3 - change watchdog version to 4.0.0
+name: The True Final Build - Using Latest Flutter
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -10,54 +8,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # ... (all setup steps are the same) ...
     - name: Checkout Repository
       uses: actions/checkout@v4
+
+    # الخطوة الحاسمة: تثبيت Flutter [3.35.6] باستخدام الطريقة الرسمية
+    - name: Set up Flutter using .fvmrc from fork
+      uses: kuhnroyal/flutter-fvm-config-action/setup@v3
+      with:
+        repository: 0xJkbCode/flet # The repo containing your .fvmrc file
+        path: '.fvmrc' 
+        cache: true
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         cache: 'pip'
+
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
-    - name: Set up Target Flutter SDK
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.35.6' 
-        channel: 'stable'
-        cache: true
 
-    - name: Install Dependencies via B-M-I Strategy
-      run: |
-        # [THE ULTIMATE FIX]: Use Python itself to reliably parse the TOML file.
-        # This is robust against comments, empty lines, and formatting.
-        DEPS_LIST=$(python -c "import tomllib; f=open('pyproject.toml','rb'); c=tomllib.load(f); print(' '.join(c['project']['dependencies']))")
-        
-        echo "Found dependencies: $DEPS_LIST"
+    - name: Install Dependencies from pyproject.toml
+      run: pip install .
 
-        echo "Step 1: Downloading all packages..."
-        pip download --dest ./temp_packages $DEPS_LIST
-
-        # ... (The rest of the surgery script remains exactly the same) ...
-        echo "Step 2: Performing surgery on flet-cli..."
-        FLET_CLI_WHEEL=$(find ./temp_packages -name "flet_cli*.whl")
-        unzip -q $FLET_CLI_WHEEL -d ./flet_cli_unpacked
-        METADATA_FILE=$(find ./flet_cli_unpacked -name "METADATA")
-        sed -i 's/watchdog (>=4.0.0,<5.0.0)/watchdog==4.0.0/g' $METADATA_FILE
-        (cd ./flet_cli_unpacked && zip -qr ../patched_flet_cli.whl .)
-        mv ./patched_flet_cli.whl $FLET_CLI_WHEEL
-
-        echo "Step 3: Installing all packages from local cache..."
-        pip install --no-index --find-links=./temp_packages $DEPS_LIST
-
-    # ... (The rest of the workflow remains the same) ...
     - name: Accept Android Licenses
       run: yes | flutter doctor --android-licenses
+
+    - name: Verify Environment (The Moment of Truth)
+      run: |
+        echo "--- Flet Version ---"
+        flet --version
+        echo "--- Flutter Version ---"
+        flutter --version
+
     - name: Build APK
       run: flet build apk --verbose
+
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:

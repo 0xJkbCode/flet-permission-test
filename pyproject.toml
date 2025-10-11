@@ -14,7 +14,7 @@ dependencies = [
     
     # We ask for the older, stable watchdog version that we know works.
     # The workflow will patch flet-cli to accept this version.
-    "watchdog==4.0.0"
+    "watchdog==3.0.0"
 ]
 
 # ===============================================================
