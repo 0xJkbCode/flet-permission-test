@@ -1,4 +1,4 @@
-name: Fix Build APK and run permission With simple way
+name: Test Contacts permission
 
 on:
   push:
