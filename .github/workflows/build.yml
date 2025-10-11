@@ -1,4 +1,4 @@
-name: The Final Hack v2.5 - install watchdog==4.0.0
+name: The Final Hack v2.6 - install watchdog==4.0.2
 
 on:
   push:

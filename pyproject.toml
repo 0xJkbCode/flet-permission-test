@@ -10,7 +10,8 @@ dependencies = [
     "flet==0.28.3",
     "flet_cli==0.28.3",
     "flet-permission-handler",
-    "watchdog==4.0.0"
+    watchdog==4.0.2,
+  
 ]
 
 # ===============================================================
