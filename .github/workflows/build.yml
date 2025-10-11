@@ -1,12 +1,7 @@
-name: The Master Plan Build
+name: The B-M-I Strategy (Build, Modify, Install)
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
-
-env:
-  FLUTTER_VERSION: '3.35.6'
 
 jobs:
   build:
@@ -31,20 +26,46 @@ jobs:
     - name: Set up Target Flutter SDK
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
+        flutter-version: '3.35.6' 
         channel: 'stable'
         cache: true
-    
-    # We don't need the complex watchdog build anymore because pyproject.toml handles it
-    - name: Install Dependencies from pyproject.toml
-      run: pip install .
 
-    - name: Patch flet-cli to accept modern Flutter
+    # ===================================================================
+    #              The Build-Modify-Install Strategy
+    # ===================================================================
+    - name: Install Dependencies via B-M-I Strategy
       run: |
-        BUILD_PY_PATH=$(python -c "import flet_cli.commands.build as b; print(b.__file__)")
-        echo "Found build.py at: $BUILD_PY_PATH"
-        sed -i 's/MINIMAL_FLUTTER_VERSION = version.Version("3.29.2")/MINIMAL_FLUTTER_VERSION = version.Version("${{ env.FLUTTER_VERSION }}")/' "$BUILD_PY_PATH"
-        echo "Patch complete."
+        # Step 1: Download all packages (and their dependencies) to a temp folder without installing
+        echo "Step 1: Downloading all packages..."
+        pip download --dest ./temp_packages -r <(grep -o '".*"' pyproject.toml | tr -d '"')
+
+        # Step 2: Perform surgery on the downloaded flet-cli metadata
+        echo "Step 2: Performing surgery on flet-cli..."
+        FLET_CLI_WHEEL=$(find ./temp_packages -name "flet_cli*.whl")
+        echo "Found flet-cli wheel: $FLET_CLI_WHEEL"
+        
+        # Unzip the wheel to a temp directory to edit it
+        unzip -q $FLET_CLI_WHEEL -d ./flet_cli_unpacked
+        
+        # Find the METADATA file
+        METADATA_FILE=$(find ./flet_cli_unpacked -name "METADATA")
+        echo "Found METADATA file at: $METADATA_FILE"
+        
+        # Perform the replacement
+        sed -i 's/watchdog (>=4.0.0,<5.0.0)/watchdog==3.0.0/g' $METADATA_FILE
+        echo "METADATA patched. New content:"
+        cat $METADATA_FILE
+        
+        # Re-zip the wheel with the modified content
+        (cd ./flet_cli_unpacked && zip -r ../patched_flet_cli.whl .)
+        
+        # Replace the original wheel with our patched one
+        mv ./patched_flet_cli.whl $FLET_CLI_WHEEL
+
+        # Step 3: Install everything from the local, patched packages
+        echo "Step 3: Installing all packages from local cache..."
+        pip install --no-index --find-links=./temp_packages -r <(grep -o '".*"' pyproject.toml | tr -d '"')
+    # ===================================================================
 
     - name: Accept Android Licenses
       run: yes | flutter doctor --android-licenses

@@ -1,17 +1,20 @@
 # ===============================================================
-#          The Final pyproject.toml (Master Plan)
+#          pyproject.toml for the B-M-I Strategy
 # ===============================================================
 
 [project]
 name = "permission_test"
 version = "1.0.0"
+# We define the dependencies as WE want them to be,
+# and let the workflow handle the "hacking" to make them work.
 dependencies = [
     "flet==0.28.3",
     "flet-cli==0.28.3",
     "flet-permission-handler",
-    # We now declare watchdog here, but we will handle its installation
-    # in a special way in the build workflow.
-    "watchdog<5.0.0,>=4.0.0"
+    
+    # We ask for the older, stable watchdog version that we know works.
+    # The workflow will patch flet-cli to accept this version.
+    "watchdog==3.0.0"
 ]
 
 # ===============================================================
@@ -23,11 +26,7 @@ product_name = "Permission Test"
 
 [tool.flet.android.permission]
 "android.permission.READ_EXTERNAL_STORAGE" = true
-"android.permission.WRITE_EXTERNAL_STORAGE" = true
-
-# [THE CRITICAL FIX #1]: Tell serious_python to allow building watchdog from source
-[tool.flet.source_packages]
-android = ["watchdog"]
+"android.permission.WRITE_EXTERNAL_STATORAGE" = true
 
 # ===============================================================
 # The Critical Flutter Fix
