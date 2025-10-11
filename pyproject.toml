@@ -1,15 +1,17 @@
 # ===============================================================
-# pyproject.toml (The Great Synthesis)
+#          pyproject.toml for the "Silver Bullet" Strategy
 # ===============================================================
 
 [project]
 name = "permission_test"
 version = "1.0.0"
+# We define only the direct dependencies of our app here
 dependencies = [
-    # We use a modern Flet version that supports the handler
-    "flet==0.28.3",
-    "flet_cli==0.28.3",
-    "flet-permission-handler",
+"flet==0.28.3",
+"flet-cli==0.28.3",
+"flet-permission-handler"
+# NOTE: 'watchdog' is intentionally omitted here.
+# It will be built and installed manually in the build.yml workflow.
 ]
 
 # ===============================================================
@@ -19,22 +21,19 @@ dependencies = [
 [tool.flet]
 product_name = "Permission Test"
 
-[tool.flet.build]
-build_number = 1
-build_version = "1.0.0"
-
-[tool.flet.build.apk]
-package_name = "com.hekma.permissiontest"
-
-[tool.flet.android.permission]
+[tool.flet.build.apk.android.permission]
 "android.permission.READ_EXTERNAL_STORAGE" = true
 "android.permission.WRITE_EXTERNAL_STORAGE" = true
-[tool.serious_python]
-no_pep517 = true
+
 # ===============================================================
-# The Two Critical Fixes Together
+# The Critical Flutter Fix
 # ===============================================================
 
-# Fix #1: Solves the Dart language version error
 [tool.flet.flutter.pubspec.dependency_overrides]
-webview_flutter_android = "4.10.1"
+webview_flutter_android = "4.iol"
+
+# ===============================================================
+# Obsolete/Removed Sections
+# ===============================================================
+# [tool.serious_python] section is removed as it was not effective.
+# We are using --no-use-pep517 directly with pip instead.
