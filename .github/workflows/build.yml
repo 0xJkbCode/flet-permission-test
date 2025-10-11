@@ -1,4 +1,4 @@
-name: Test Contacts fix permission in toml file
+name: Test Add Contact
 
 on:
   push:

@@ -1,21 +1,16 @@
 # ===============================================================
 #          pyproject.toml for the B-M-I Strategy
 # ===============================================================
-
 [project]
 name = "permission_test"
 version = "1.0.0"
 # We define the dependencies as WE want them to be,
 # and let the workflow handle the "hacking" to make them work.
-dependencies = [
-    "flet==0.28.3",
-    "flet-permission-handler"
-]
+dependencies = ["flet==0.28.3", "flet-permission-handler", "pyjnius"]
 
 # ===============================================================
 # Flet-specific build settings
 # ===============================================================
-
 [tool.flet]
 product_name = "Permission Test"
 
@@ -26,6 +21,5 @@ product_name = "Permission Test"
 # ===============================================================
 # The Critical Flutter Fix
 # ===============================================================
-
 [tool.flet.flutter.pubspec.dependency_overrides]
 webview_flutter_android = "4.10.1"
