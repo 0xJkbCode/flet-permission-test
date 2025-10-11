@@ -29,7 +29,8 @@ package_name = "com.hekma.permissiontest"
 [tool.flet.android.permission]
 "android.permission.READ_EXTERNAL_STORAGE" = true
 "android.permission.WRITE_EXTERNAL_STORAGE" = true
-
+[tool.serious_python]
+no_pep517 = true
 # ===============================================================
 # The Two Critical Fixes Together
 # ===============================================================
