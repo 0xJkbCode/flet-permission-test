@@ -1,4 +1,4 @@
-name: The Final Hack v2.7 - install python 3.13
+name: The Final Hack v2.8 Fix Toml file
 
 on:
   push:
