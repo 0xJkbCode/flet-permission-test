@@ -1,4 +1,4 @@
-name: Silver Bullet Build - Separate Watchdog
+name: The Final, Clean Build
 
 on:
   push:
@@ -7,7 +7,6 @@ on:
 
 env:
   FLUTTER_VERSION: '3.35.6'
-  # We define the specific, problematic version here for clarity
   WATCHDOG_VERSION: '4.0.0'
 
 jobs:
@@ -38,24 +37,24 @@ jobs:
         cache: true
     
     # ===================================================================
-    #               The Silver Bullet Dependency Installation
+    #              The Clean "Silver Bullet" Installation
     # ===================================================================
-    - name: Install Dependencies with custom watchdog build
+    - name: Install Dependencies with Clean Watchdog Build
       run: |
-        # Step 1: Create a directory to store our custom-built wheel
-        mkdir -p local_wheels
+        # [الإصلاح]: بنعمل الفولدر المؤقت في مكان بعيد عن المشروع
+        WHEEL_DIR=$(mktemp -d)
         
-        # Step 2: Build the watchdog wheel using the legacy method
-        echo "Building watchdog wheel with --no-use-pep517..."
-        pip wheel --no-use-pep517 --wheel-dir=local_wheels watchdog==${{ env.WATCHDOG_VERSION }}
+        # بنبني الـ wheel جوه الفولدر المؤقت ده
+        echo "Building watchdog wheel in $WHEEL_DIR..."
+        pip wheel --no-use-pep517 --wheel-dir=$WHEEL_DIR watchdog==${{ env.WATCHDOG_VERSION }}
         
-        # Step 3: Install everything. Pip will now find watchdog in our local folder first.
+        # بنثبت كل حاجة، وبنقول لـ pip يبص على الفولدر المؤقت ده
         echo "Installing all dependencies..."
-        pip install --find-links=local_wheels .
+        pip install --find-links=$WHEEL_DIR .
     # ===================================================================
 
-    # The surgery step remains the same
     - name: Patch flet-cli to accept modern Flutter
+      # ... (This step remains the same) ...
       run: |
         BUILD_PY_PATH=$(python -c "import flet_cli.commands.build as b; print(b.__file__)")
         echo "Found build.py at: $BUILD_PY_PATH"
