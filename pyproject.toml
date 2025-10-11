@@ -10,11 +10,7 @@ version = "1.0.0"
 dependencies = [
     "flet==0.28.3",
     "flet-cli==0.28.3",
-    "flet-permission-handler",
-    
-    # We ask for the older, stable watchdog version that we know works.
-    # The workflow will patch flet-cli to accept this version.
-    "watchdog==3.0.0"
+    "flet-permission-handler"
 ]
 
 # ===============================================================

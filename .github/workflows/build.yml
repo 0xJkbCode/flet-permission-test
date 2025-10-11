@@ -1,4 +1,4 @@
-name: The True Final Build - Include .fvmrc to project
+name: The True Final Build
 
 on:
   workflow_dispatch:
