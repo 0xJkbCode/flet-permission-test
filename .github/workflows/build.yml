@@ -1,4 +1,4 @@
-name: The True Final Build
+name: The True Final Build with Normal way
 
 on:
   workflow_dispatch:
@@ -11,13 +11,6 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    # الخطوة الحاسمة: تثبيت Flutter [3.35.6] باستخدام الطريقة الرسمية
-    - name: Set up Flutter using .fvmrc from fork
-      uses: kuhnroyal/flutter-fvm-config-action/setup@v3
-      with:
-        repository: 0xJkbCode/flet # The repo containing your .fvmrc file
-        path: '.fvmrc' 
-        cache: true
 
     - name: Set up Python
       uses: actions/setup-python@v5
