@@ -19,11 +19,9 @@ dependencies = [
 [tool.flet]
 product_name = "Permission Test"
 
-[tool.flet.android]
-permissions = [
-    "android.permission.READ_CONTACTS",
-    "android.permission.WRITE_CONTACTS"
-]
+[tool.flet.android.permission]
+"android.permission.READ_CONTACTS" = true
+"android.permission.WRITE_CONTACTS" = true
 
 # ===============================================================
 # The Critical Flutter Fix
