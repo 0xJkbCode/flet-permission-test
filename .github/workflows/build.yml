@@ -1,4 +1,4 @@
-name: Test Add Contact
+name: Test Add Contact 1
 
 on:
   push:
