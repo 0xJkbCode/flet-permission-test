@@ -30,7 +30,7 @@ product_name = "Permission Test"
 # ===============================================================
 
 [tool.flet.flutter.pubspec.dependency_overrides]
-webview_flutter_android = "4.iol"
+webview_flutter_android = "4.10.1"
 
 # ===============================================================
 # Obsolete/Removed Sections

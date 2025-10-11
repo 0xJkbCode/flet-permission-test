@@ -1,4 +1,4 @@
-name: The Final, Clean Build
+name: The Final, Fix toml file
 
 on:
   push:
