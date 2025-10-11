@@ -1,4 +1,4 @@
-name: The B-M-I Strategy v1.2 - Python Parser
+name: The B-M-I Strategy v1.3 - change watchdog version to 4.0.0
 
 on:
   push:
@@ -46,7 +46,7 @@ jobs:
         FLET_CLI_WHEEL=$(find ./temp_packages -name "flet_cli*.whl")
         unzip -q $FLET_CLI_WHEEL -d ./flet_cli_unpacked
         METADATA_FILE=$(find ./flet_cli_unpacked -name "METADATA")
-        sed -i 's/watchdog (>=4.0.0,<5.0.0)/watchdog==3.0.0/g' $METADATA_FILE
+        sed -i 's/watchdog (>=4.0.0,<5.0.0)/watchdog==4.0.0/g' $METADATA_FILE
         (cd ./flet_cli_unpacked && zip -qr ../patched_flet_cli.whl .)
         mv ./patched_flet_cli.whl $FLET_CLI_WHEEL
 
