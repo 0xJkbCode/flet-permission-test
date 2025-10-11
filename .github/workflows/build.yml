@@ -1,7 +1,13 @@
-name: The Pre-release Gambit
+name: Fix Build APK and run permission With simple way
 
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
+
+env:
+  PYTHONUTF8: 1 # Still useful for clean logs
+  FLET_CLI_NO_RICH_OUTPUT: 1
 
 jobs:
   build:
@@ -23,9 +29,16 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    # [THE GAMBIT]: We need to tell pip to allow pre-release versions
-    - name: Install Dependencies
-      run: pip install --pre .
+    # We do NOT set up Flutter. We let Flet handle it.
+    
+    - name: Install Dependencies from pyproject.toml
+      run: pip install .
 
     - name: Build APK
       run: flet build apk --verbose
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release.apk
+        path: build/apk/app-release.apk

@@ -8,8 +8,7 @@ version = "1.0.0"
 # We define the dependencies as WE want them to be,
 # and let the workflow handle the "hacking" to make them work.
 dependencies = [
-    # "flet==0.28.3"
-    "flet==0.70.0.dev6281",
+    "flet==0.28.3",
     "flet-permission-handler"
 ]
 
@@ -28,5 +27,5 @@ product_name = "Permission Test"
 # The Critical Flutter Fix
 # ===============================================================
 
-#[tool.flet.flutter.pubspec.dependency_overrides]
-# webview_flutter_android = "4.10.1"
+[tool.flet.flutter.pubspec.dependency_overrides]
+webview_flutter_android = "4.10.1"
