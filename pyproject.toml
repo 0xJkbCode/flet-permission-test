@@ -1,17 +1,17 @@
 # ===============================================================
-#          pyproject.toml for the "Silver Bullet" Strategy
+#          The Final pyproject.toml (Master Plan)
 # ===============================================================
 
 [project]
 name = "permission_test"
 version = "1.0.0"
-# We define only the direct dependencies of our app here
 dependencies = [
-"flet==0.28.3",
-"flet-cli==0.28.3",
-"flet-permission-handler"
-# NOTE: 'watchdog' is intentionally omitted here.
-# It will be built and installed manually in the build.yml workflow.
+    "flet==0.28.3",
+    "flet-cli==0.28.3",
+    "flet-permission-handler",
+    # We now declare watchdog here, but we will handle its installation
+    # in a special way in the build workflow.
+    "watchdog<5.0.0,>=4.0.0"
 ]
 
 # ===============================================================
@@ -21,9 +21,13 @@ dependencies = [
 [tool.flet]
 product_name = "Permission Test"
 
-[tool.flet.build.apk.android.permission]
+[tool.flet.android.permission]
 "android.permission.READ_EXTERNAL_STORAGE" = true
 "android.permission.WRITE_EXTERNAL_STORAGE" = true
+
+# [THE CRITICAL FIX #1]: Tell serious_python to allow building watchdog from source
+[tool.flet.source_packages]
+android = ["watchdog"]
 
 # ===============================================================
 # The Critical Flutter Fix
@@ -31,9 +35,3 @@ product_name = "Permission Test"
 
 [tool.flet.flutter.pubspec.dependency_overrides]
 webview_flutter_android = "4.10.1"
-
-# ===============================================================
-# Obsolete/Removed Sections
-# ===============================================================
-# [tool.serious_python] section is removed as it was not effective.
-# We are using --no-use-pep517 directly with pip instead.

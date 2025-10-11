@@ -1,4 +1,4 @@
-name: The Final, Fix toml file
+name: The Master Plan Build
 
 on:
   push:
@@ -7,7 +7,6 @@ on:
 
 env:
   FLUTTER_VERSION: '3.35.6'
-  WATCHDOG_VERSION: '4.0.0'
 
 jobs:
   build:
@@ -36,25 +35,11 @@ jobs:
         channel: 'stable'
         cache: true
     
-    # ===================================================================
-    #              The Clean "Silver Bullet" Installation
-    # ===================================================================
-    - name: Install Dependencies with Clean Watchdog Build
-      run: |
-        # [الإصلاح]: بنعمل الفولدر المؤقت في مكان بعيد عن المشروع
-        WHEEL_DIR=$(mktemp -d)
-        
-        # بنبني الـ wheel جوه الفولدر المؤقت ده
-        echo "Building watchdog wheel in $WHEEL_DIR..."
-        pip wheel --no-use-pep517 --wheel-dir=$WHEEL_DIR watchdog==${{ env.WATCHDOG_VERSION }}
-        
-        # بنثبت كل حاجة، وبنقول لـ pip يبص على الفولدر المؤقت ده
-        echo "Installing all dependencies..."
-        pip install --find-links=$WHEEL_DIR .
-    # ===================================================================
+    # We don't need the complex watchdog build anymore because pyproject.toml handles it
+    - name: Install Dependencies from pyproject.toml
+      run: pip install .
 
     - name: Patch flet-cli to accept modern Flutter
-      # ... (This step remains the same) ...
       run: |
         BUILD_PY_PATH=$(python -c "import flet_cli.commands.build as b; print(b.__file__)")
         echo "Found build.py at: $BUILD_PY_PATH"
