@@ -1,6 +1,8 @@
-name: The B-M-I Strategy (Build, Modify, Install)
+name: The B-M-I Strategy v1.1 - Precise Parsing
 
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -8,21 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # ... (all setup steps are the same) ...
     - name: Checkout Repository
       uses: actions/checkout@v4
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         cache: 'pip'
-
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
-
     - name: Set up Target Flutter SDK
       uses: subosito/flutter-action@v2
       with:
@@ -30,49 +30,32 @@ jobs:
         channel: 'stable'
         cache: true
 
-    # ===================================================================
-    #              The Build-Modify-Install Strategy
-    # ===================================================================
     - name: Install Dependencies via B-M-I Strategy
       run: |
-        # Step 1: Download all packages (and their dependencies) to a temp folder without installing
+        # [THE FIX]: A smarter way to parse dependencies from pyproject.toml
+        # This awk script finds the [project.dependencies] section and prints only the lines inside it.
+        DEPS_LIST=$(awk '/^\[project\.dependencies\]/{flag=1; next} /^\[/{flag=0} flag' pyproject.toml)
+        
         echo "Step 1: Downloading all packages..."
-        pip download --dest ./temp_packages -r <(grep -o '".*"' pyproject.toml | tr -d '"')
+        pip download --dest ./temp_packages $DEPS_LIST
 
-        # Step 2: Perform surgery on the downloaded flet-cli metadata
+        # ... (The rest of the surgery script remains exactly the same) ...
         echo "Step 2: Performing surgery on flet-cli..."
         FLET_CLI_WHEEL=$(find ./temp_packages -name "flet_cli*.whl")
-        echo "Found flet-cli wheel: $FLET_CLI_WHEEL"
-        
-        # Unzip the wheel to a temp directory to edit it
         unzip -q $FLET_CLI_WHEEL -d ./flet_cli_unpacked
-        
-        # Find the METADATA file
         METADATA_FILE=$(find ./flet_cli_unpacked -name "METADATA")
-        echo "Found METADATA file at: $METADATA_FILE"
-        
-        # Perform the replacement
         sed -i 's/watchdog (>=4.0.0,<5.0.0)/watchdog==3.0.0/g' $METADATA_FILE
-        echo "METADATA patched. New content:"
-        cat $METADATA_FILE
-        
-        # Re-zip the wheel with the modified content
-        (cd ./flet_cli_unpacked && zip -r ../patched_flet_cli.whl .)
-        
-        # Replace the original wheel with our patched one
+        (cd ./flet_cli_unpacked && zip -qr ../patched_flet_cli.whl .)
         mv ./patched_flet_cli.whl $FLET_CLI_WHEEL
 
-        # Step 3: Install everything from the local, patched packages
         echo "Step 3: Installing all packages from local cache..."
-        pip install --no-index --find-links=./temp_packages -r <(grep -o '".*"' pyproject.toml | tr -d '"')
-    # ===================================================================
+        pip install --no-index --find-links=./temp_packages $DEPS_LIST
 
+    # ... (The rest of the workflow remains the same) ...
     - name: Accept Android Licenses
       run: yes | flutter doctor --android-licenses
-
     - name: Build APK
       run: flet build apk --verbose
-
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
