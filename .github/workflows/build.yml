@@ -1,4 +1,4 @@
-name: The B-M-I Strategy v1.1 - Precise Parsing
+name: The B-M-I Strategy v1.2 - Python Parser
 
 on:
   push:
@@ -32,10 +32,12 @@ jobs:
 
     - name: Install Dependencies via B-M-I Strategy
       run: |
-        # [THE FIX]: A smarter way to parse dependencies from pyproject.toml
-        # This awk script finds the [project.dependencies] section and prints only the lines inside it.
-        DEPS_LIST=$(awk '/^\[project\.dependencies\]/{flag=1; next} /^\[/{flag=0} flag' pyproject.toml)
+        # [THE ULTIMATE FIX]: Use Python itself to reliably parse the TOML file.
+        # This is robust against comments, empty lines, and formatting.
+        DEPS_LIST=$(python -c "import tomllib; f=open('pyproject.toml','rb'); c=tomllib.load(f); print(' '.join(c['project']['dependencies']))")
         
+        echo "Found dependencies: $DEPS_LIST"
+
         echo "Step 1: Downloading all packages..."
         pip download --dest ./temp_packages $DEPS_LIST
 
