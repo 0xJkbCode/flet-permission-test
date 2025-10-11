@@ -9,7 +9,6 @@ version = "1.0.0"
 # and let the workflow handle the "hacking" to make them work.
 dependencies = [
     "flet==0.28.3",
-    "flet-cli==0.28.3",
     "flet-permission-handler"
 ]
 

@@ -1,4 +1,4 @@
-name: Proof of APK build and permissions issue
+name: Fix
 
 on:
   push:
