@@ -1,4 +1,4 @@
-name: The Final Hack v2.9 Fix Toml file with ""
+name: The Final Hack v2.10 install watchdog localy
 
 on:
   push:
@@ -36,9 +36,12 @@ jobs:
         flutter-version: ${{ env.FLUTTER_VERSION }}
         channel: 'stable'
         cache: true
-
+    
     - name: Install Dependencies from pyproject.toml
-      run: pip install .
+      # First, install watchdog from the local wheel file
+      run: | 
+        pip install wheels/watchdog-4.0.2-py3-none-any.whl
+        pip install .
 
     # ------------------ THE SURGERY (Absolute Path Fix) ------------------
     - name: Patch flet-cli to accept modern Flutter
