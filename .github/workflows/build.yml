@@ -1,4 +1,4 @@
-name: Create a .fvmrc
+name: The Pre-release Gambit
 
 on:
   workflow_dispatch:
@@ -10,17 +10,6 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-
-    # الخطوة 1: تثبيت Flutter باستخدام FVM (الطريقة الرسمية)
-    - name: Set up Flutter using .fvmrc
-      uses: kuhnroyal/flutter-fvm-config-action/setup@v3
-      with:
-        # بنجيب ملف .fvmrc من الـ fork بتاعك
-        # ده هيجبره يثبت الإصدار اللي إحنا حددناه (3.22.0)
-        # لازم تعمل commit للملف ده في الـ fork بتاعك الأول
-        repository: 0xJkbCode/flet
-        path: '.fvmrc' 
-        cache: true
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -34,17 +23,9 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install Dependencies from pyproject.toml
-      run: pip install .
-
-    - name: Accept Android Licenses
-      run: yes | flutter doctor --android-licenses
+    # [THE GAMBIT]: We need to tell pip to allow pre-release versions
+    - name: Install Dependencies
+      run: pip install --pre .
 
     - name: Build APK
       run: flet build apk --verbose
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release.apk
-        path: build/apk/app-release.apk
