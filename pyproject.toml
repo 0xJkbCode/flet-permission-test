@@ -13,6 +13,10 @@ dependencies = ["flet==0.28.3", "flet-permission-handler", "pyjnius"]
 # ===============================================================
 [tool.flet]
 product_name = "Permission Test"
+[tool.flet.android]
+dependencies = [
+    "pyjnius"
+]
 
 [tool.flet.android.permission]
 "android.permission.READ_CONTACTS" = true
