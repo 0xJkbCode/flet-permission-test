@@ -10,98 +10,91 @@ except ImportError:
     autoclass = None
     IS_ANDROID = False
 
-# --- Android Native Functions ---
-def get_activity():
-    """الحصول على Activity بطريقة مباشرة"""
+def get_context():
+    """الحصول على Application Context بدلاً من Activity"""
     if not autoclass:
         return None
     
     try:
-        # استخدام MainActivity التي اكتشفتها
-        MainActivity = autoclass('com.flet.permission_test.MainActivity')
-        return MainActivity.mActivity
+        # الطريقة الأفضل - استخدام Application Context
+        # هذا يعمل بشكل أفضل من Activity للعمليات طويلة المدى
+        Context = autoclass('android.content.Context')
+        
+        # محاولة الحصول على Application Context من خلال Static Method
+        ActivityThread = autoclass('android.app.ActivityThread')
+        current_application = ActivityThread.currentApplication()
+        
+        if current_application:
+            context = current_application.getApplicationContext()
+            print("Got ApplicationContext via ActivityThread")
+            return context
     except Exception as e:
-        print(f"Error getting MainActivity directly: {e}")
-        
-        # الطريقة البديلة باستخدام متغير البيئة
-        try:
-            activity_host_class = os.getenv("MAIN_ACTIVITY_HOST_CLASS_NAME")
-            if activity_host_class:
-                activity_host = autoclass(activity_host_class)
-                return activity_host.mActivity
-        except Exception as e2:
-            print(f"Error getting activity via environment variable: {e2}")
-        
-        return None
+        print(f"ActivityThread method failed: {e}")
+    
+    print("Could not get context")
+    return None
 
 def request_contact_permissions() -> bool:
-    """طلب صلاحيات جهات الاتصال باستخدام pyjnius"""
+    """طلب صلاحيات جهات الاتصال"""
     if not autoclass:
-        print("Cannot request permissions, pyjnius is not available.")
         return False
     
     try:
-        # الحصول على Activity
-        current_activity = get_activity()
-        if not current_activity:
-            print("Could not get current activity")
+        context = get_context()
+        if not context:
+            print("Could not get context")
             return False
         
-        # استيراد الكلاسات الضرورية
-        ActivityCompat = autoclass('androidx.core.app.ActivityCompat')
+        print(f"Got context: {context}")
+        
+        # استخدام ContextCompat بدلاً من ActivityCompat للتحقق من الصلاحيات
+        ContextCompat = autoclass('androidx.core.content.ContextCompat')
         Manifest = autoclass('android.Manifest$permission')
         PackageManager = autoclass('android.content.pm.PackageManager')
         
         # التحقق من الصلاحية
-        write_permission = ActivityCompat.checkSelfPermission(
-            current_activity, 
+        write_permission = ContextCompat.checkSelfPermission(
+            context, 
             Manifest.WRITE_CONTACTS
         )
         
+        print(f"Permission status: {write_permission}")
+        
         if write_permission == PackageManager.PERMISSION_GRANTED:
-            print("WRITE_CONTACTS permission is already granted.")
+            print("WRITE_CONTACTS permission is granted")
             return True
-        
-        # طلب الصلاحية
-        print("Requesting WRITE_CONTACTS permission...")
-        permissions_array = [Manifest.WRITE_CONTACTS, Manifest.READ_CONTACTS]
-        ActivityCompat.requestPermissions(
-            current_activity,
-            permissions_array,
-            100  # Request code
-        )
-        
-        print("Permission request dialog should be shown.")
-        return True
+        else:
+            print("WRITE_CONTACTS permission not granted")
+            # لا يمكن طلب الصلاحية من Context، نحتاج Activity للطلب
+            # لكن يمكننا إرشاد المستخدم للإعدادات
+            return False
         
     except Exception as e:
-        print(f"Error requesting permissions via pyjnius: {e}")
+        print(f"Error in permission check: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def add_contact(name: str, phone: str) -> bool:
-    """إضافة جهة اتصال باستخدام pyjnius"""
-    if not autoclass:
-        print("Cannot add contact, pyjnius is not available.")
-        return False
-    
-    if not name or not phone:
-        print("Name and phone are required")
+    """إضافة جهة اتصال باستخدام ApplicationContext"""
+    if not autoclass or not name or not phone:
         return False
     
     try:
-        # الحصول على Activity
-        current_activity = get_activity()
-        if not current_activity:
-            print("Could not get current activity")
+        context = get_context()
+        if not context:
+            print("Could not get context for adding contact")
             return False
         
+        print(f"Got context for adding contact: {context}")
+        
         # التحقق من الصلاحيات أولاً
-        ActivityCompat = autoclass('androidx.core.app.ActivityCompat')
+        ContextCompat = autoclass('androidx.core.content.ContextCompat')
         Manifest = autoclass('android.Manifest$permission')
         PackageManager = autoclass('android.content.pm.PackageManager')
         
-        write_permission = ActivityCompat.checkSelfPermission(
-            current_activity, 
+        write_permission = ContextCompat.checkSelfPermission(
+            context, 
             Manifest.WRITE_CONTACTS
         )
         
@@ -109,50 +102,87 @@ def add_contact(name: str, phone: str) -> bool:
             print("WRITE_CONTACTS permission not granted")
             return False
         
-        # استيراد الكلاسات الضرورية لإضافة جهة الاتصال
+        print("Permission confirmed, proceeding with contact creation")
+        
+        # استيراد الكلاسات
         ContentValues = autoclass('android.content.ContentValues')
         ContactsContract = autoclass('android.provider.ContactsContract')
-        Data = ContactsContract.Data
-        RawContacts = ContactsContract.RawContacts  
-        StructuredName = ContactsContract.CommonDataKinds.StructuredName
-        Phone = ContactsContract.CommonDataKinds.Phone
+        Data = autoclass('android.provider.ContactsContract$Data')
+        RawContacts = autoclass('android.provider.ContactsContract$RawContacts')
+        StructuredName = autoclass('android.provider.ContactsContract$CommonDataKinds$StructuredName')
+        Phone = autoclass('android.provider.ContactsContract$CommonDataKinds$Phone')
         
-        # الحصول على ContentResolver
-        content_resolver = current_activity.getContentResolver()
+        print("Loaded ContactsContract classes")
+        
+        # الحصول على ContentResolver من Context
+        content_resolver = context.getContentResolver()
+        print("Got ContentResolver from context")
         
         # إنشاء جهة اتصال جديدة
         values = ContentValues()
         values.put(RawContacts.ACCOUNT_TYPE, None)
         values.put(RawContacts.ACCOUNT_NAME, None)
         
+        print("Creating raw contact...")
         raw_contact_uri = content_resolver.insert(RawContacts.CONTENT_URI, values)
+        
         if not raw_contact_uri:
             print("Failed to create raw contact")
             return False
         
-        # الحصول على raw_contact_id
         raw_contact_id = int(raw_contact_uri.getLastPathSegment())
+        print(f"Created raw contact with ID: {raw_contact_id}")
         
         # إضافة الاسم
+        print("Adding name...")
         name_values = ContentValues()
         name_values.put(Data.RAW_CONTACT_ID, raw_contact_id)
         name_values.put(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
         name_values.put(StructuredName.DISPLAY_NAME, name)
         content_resolver.insert(Data.CONTENT_URI, name_values)
+        print("Name added successfully")
         
         # إضافة رقم الهاتف
+        print("Adding phone number...")
         phone_values = ContentValues()
         phone_values.put(Data.RAW_CONTACT_ID, raw_contact_id)
         phone_values.put(Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
         phone_values.put(Phone.NUMBER, phone)
         phone_values.put(Phone.TYPE, Phone.TYPE_MOBILE)
         content_resolver.insert(Data.CONTENT_URI, phone_values)
+        print("Phone number added successfully")
         
-        print(f"Contact '{name}' added successfully via pyjnius.")
+        print(f"Contact '{name}' added successfully!")
         return True
         
     except Exception as e:
-        print(f"Error adding contact via pyjnius: {e}")
+        print(f"Error adding contact: {e}")
         import traceback
         traceback.print_exc()
+        return False
+
+# دالة إضافية لفتح إعدادات التطبيق
+def open_app_settings():
+    """فتح إعدادات التطبيق لطلب الصلاحيات يدوياً"""
+    try:
+        context = get_context()
+        if not context:
+            return False
+        
+        Intent = autoclass('android.content.Intent')
+        Settings = autoclass('android.provider.Settings')
+        Uri = autoclass('android.net.Uri')
+        
+        intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        package_name = context.getPackageName()
+        uri = Uri.fromParts("package", package_name, None)
+        intent.setData(uri)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        
+        context.startActivity(intent)
+        print("Opened app settings")
+        return True
+        
+    except Exception as e:
+        print(f"Error opening app settings: {e}")
         return False
