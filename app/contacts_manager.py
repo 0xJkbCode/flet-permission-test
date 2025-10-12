@@ -10,28 +10,39 @@ except ImportError:
     autoclass = None
     IS_ANDROID = False
 
-def get_context():
-    """الحصول على Application Context بدلاً من Activity"""
+def get_activity():
+    """الحصول على FlutterActivity الحالي"""
     if not autoclass:
         return None
     
     try:
-        # الطريقة الأفضل - استخدام Application Context
-        # هذا يعمل بشكل أفضل من Activity للعمليات طويلة المدى
-        Context = autoclass('android.content.Context')
+        # بما أن MainActivity يرث من FlutterActivity، يمكننا الوصول إليه مباشرة
+        # باستخدام ActivityThread للحصول على Current Activity
+        ActivityThread = autoclass('android.app.ActivityThread')
         
-        # محاولة الحصول على Application Context من خلال Static Method
+        # الحصول على current activity من ActivityThread
+        current_activity = ActivityThread.currentActivity()
+        
+        if current_activity:
+            print("Got current activity via ActivityThread")
+            return current_activity
+        
+    except Exception as e:
+        print(f"ActivityThread.currentActivity() failed: {e}")
+    
+    # طريقة بديلة - الحصول على Application Context
+    try:
         ActivityThread = autoclass('android.app.ActivityThread')
         current_application = ActivityThread.currentApplication()
         
         if current_application:
-            context = current_application.getApplicationContext()
-            print("Got ApplicationContext via ActivityThread")
-            return context
+            print("Got application context")
+            return current_application.getApplicationContext()
+        
     except Exception as e:
-        print(f"ActivityThread method failed: {e}")
+        print(f"ActivityThread.currentApplication() failed: {e}")
     
-    print("Could not get context")
+    print("Could not get activity or context")
     return None
 
 def request_contact_permissions() -> bool:
@@ -40,21 +51,19 @@ def request_contact_permissions() -> bool:
         return False
     
     try:
-        context = get_context()
-        if not context:
-            print("Could not get context")
+        current_activity = get_activity()
+        if not current_activity:
             return False
         
-        print(f"Got context: {context}")
+        print(f"Got activity/context: {current_activity}")
         
-        # استخدام ContextCompat بدلاً من ActivityCompat للتحقق من الصلاحيات
+        # استخدام ContextCompat للتحقق من الصلاحيات (يعمل مع Activity و Context)
         ContextCompat = autoclass('androidx.core.content.ContextCompat')
         Manifest = autoclass('android.Manifest$permission')
         PackageManager = autoclass('android.content.pm.PackageManager')
         
-        # التحقق من الصلاحية
         write_permission = ContextCompat.checkSelfPermission(
-            context, 
+            current_activity, 
             Manifest.WRITE_CONTACTS
         )
         
@@ -65,9 +74,21 @@ def request_contact_permissions() -> bool:
             return True
         else:
             print("WRITE_CONTACTS permission not granted")
-            # لا يمكن طلب الصلاحية من Context، نحتاج Activity للطلب
-            # لكن يمكننا إرشاد المستخدم للإعدادات
-            return False
+            
+            # محاولة طلب الصلاحية إذا كان Activity متاحًا
+            try:
+                ActivityCompat = autoclass('androidx.core.app.ActivityCompat')
+                permissions_array = [Manifest.WRITE_CONTACTS, Manifest.READ_CONTACTS]
+                ActivityCompat.requestPermissions(
+                    current_activity,
+                    permissions_array,
+                    100
+                )
+                print("Permission request sent")
+                return True
+            except Exception as e:
+                print(f"Could not request permission: {e}")
+                return False
         
     except Exception as e:
         print(f"Error in permission check: {e}")
@@ -76,25 +97,24 @@ def request_contact_permissions() -> bool:
         return False
 
 def add_contact(name: str, phone: str) -> bool:
-    """إضافة جهة اتصال باستخدام ApplicationContext"""
+    """إضافة جهة اتصال"""
     if not autoclass or not name or not phone:
         return False
     
     try:
-        context = get_context()
-        if not context:
-            print("Could not get context for adding contact")
+        current_activity = get_activity()
+        if not current_activity:
             return False
         
-        print(f"Got context for adding contact: {context}")
+        print(f"Got activity/context for adding contact: {current_activity}")
         
-        # التحقق من الصلاحيات أولاً
+        # التحقق من الصلاحيات
         ContextCompat = autoclass('androidx.core.content.ContextCompat')
         Manifest = autoclass('android.Manifest$permission')
         PackageManager = autoclass('android.content.pm.PackageManager')
         
         write_permission = ContextCompat.checkSelfPermission(
-            context, 
+            current_activity, 
             Manifest.WRITE_CONTACTS
         )
         
@@ -102,7 +122,7 @@ def add_contact(name: str, phone: str) -> bool:
             print("WRITE_CONTACTS permission not granted")
             return False
         
-        print("Permission confirmed, proceeding with contact creation")
+        print("Permission confirmed, creating contact")
         
         # استيراد الكلاسات
         ContentValues = autoclass('android.content.ContentValues')
@@ -112,20 +132,16 @@ def add_contact(name: str, phone: str) -> bool:
         StructuredName = autoclass('android.provider.ContactsContract$CommonDataKinds$StructuredName')
         Phone = autoclass('android.provider.ContactsContract$CommonDataKinds$Phone')
         
-        print("Loaded ContactsContract classes")
-        
-        # الحصول على ContentResolver من Context
-        content_resolver = context.getContentResolver()
-        print("Got ContentResolver from context")
+        # الحصول على ContentResolver
+        content_resolver = current_activity.getContentResolver()
+        print("Got ContentResolver")
         
         # إنشاء جهة اتصال جديدة
         values = ContentValues()
         values.put(RawContacts.ACCOUNT_TYPE, None)
         values.put(RawContacts.ACCOUNT_NAME, None)
         
-        print("Creating raw contact...")
         raw_contact_uri = content_resolver.insert(RawContacts.CONTENT_URI, values)
-        
         if not raw_contact_uri:
             print("Failed to create raw contact")
             return False
@@ -134,23 +150,21 @@ def add_contact(name: str, phone: str) -> bool:
         print(f"Created raw contact with ID: {raw_contact_id}")
         
         # إضافة الاسم
-        print("Adding name...")
         name_values = ContentValues()
         name_values.put(Data.RAW_CONTACT_ID, raw_contact_id)
         name_values.put(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
         name_values.put(StructuredName.DISPLAY_NAME, name)
         content_resolver.insert(Data.CONTENT_URI, name_values)
-        print("Name added successfully")
+        print("Name added")
         
         # إضافة رقم الهاتف
-        print("Adding phone number...")
         phone_values = ContentValues()
         phone_values.put(Data.RAW_CONTACT_ID, raw_contact_id)
         phone_values.put(Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
         phone_values.put(Phone.NUMBER, phone)
         phone_values.put(Phone.TYPE, Phone.TYPE_MOBILE)
         content_resolver.insert(Data.CONTENT_URI, phone_values)
-        print("Phone number added successfully")
+        print("Phone added")
         
         print(f"Contact '{name}' added successfully!")
         return True
@@ -159,30 +173,4 @@ def add_contact(name: str, phone: str) -> bool:
         print(f"Error adding contact: {e}")
         import traceback
         traceback.print_exc()
-        return False
-
-# دالة إضافية لفتح إعدادات التطبيق
-def open_app_settings():
-    """فتح إعدادات التطبيق لطلب الصلاحيات يدوياً"""
-    try:
-        context = get_context()
-        if not context:
-            return False
-        
-        Intent = autoclass('android.content.Intent')
-        Settings = autoclass('android.provider.Settings')
-        Uri = autoclass('android.net.Uri')
-        
-        intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        package_name = context.getPackageName()
-        uri = Uri.fromParts("package", package_name, None)
-        intent.setData(uri)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        
-        context.startActivity(intent)
-        print("Opened app settings")
-        return True
-        
-    except Exception as e:
-        print(f"Error opening app settings: {e}")
         return False
